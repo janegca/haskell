@@ -1,6 +1,7 @@
 
 {-
     Exercise: Validating a Credit Card Number
+    Source: Week 1 Homework http://www.seas.upenn.edu/~cis194/lectures.html
     
     - double the value of every second digit from the right
       i.e. [1,3,8,6] => [2,3,16,6]
