@@ -79,10 +79,10 @@ hanoiNumSteps n = length (hanoi n "a" "b" "c")
 --      Triangles and lookups (a later TODO)
 --
 -- Frame-Stewart Algorithm
---      move top half of discs to spare peg using 4 pegs
---      move bottom half of discs to destination peg using hanoi
+--      move top partition of discs to spare peg using 4 pegs
+--      move bottom partition of discs to destination peg using hanoi
 --          3 peg solution
---      move top half of discs to destination disc using 4 pegs
+--      move top partition of discs to destination disc using 4 pegs
 --
 -- Pegs are 's'ource, 'd'estination, with t1 and t2 for temporary
 -- storage
@@ -91,6 +91,7 @@ hanoiNumSteps n = length (hanoi n "a" "b" "c")
 --      hanoi'  3 "a" "b" "c" "d"  -> list of   5 moves
 --      hanoi'  5 "a" "b" "c" "d"  -> list of  13 moves
 --      hanoi' 15 "a" "b" "c" "d"  -> list of 129 moves
+--      hanoi' 16 "a" "b" "c" "d"  -> list of 161 moves
 --
 hanoi' :: Integer -> Peg -> Peg -> Peg -> Peg -> [Move]
 hanoi' 0 _ _ _ _   = []
