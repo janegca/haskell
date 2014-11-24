@@ -95,7 +95,6 @@ hanoiNumSteps n = length (hanoi n "a" "b" "c")
 --
 hanoi' :: Integer -> Peg -> Peg -> Peg -> Peg -> [Move]
 hanoi' 0 _ _ _ _   = []
-hanoi' 3 s d t1 t2 = [ (s,t1), (s,t2), (s,d), (t2,d), (t1,d) ]
 hanoi' n s d t1 t2 =  hanoi' top s t2 t1 d     -- top discs on t2 peg
                    ++ hanoi  bot s d t1        -- bottom discs to d peg
                    ++ hanoi' top t2 d s t1     -- top discs to d peg
