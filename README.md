@@ -1,4 +1,4 @@
 haskell
 =======
 
-Various code pieces created while attempting to learn FP with Haskell
+Various bits of code created while attempting to learn Functional Programming with Haskell
