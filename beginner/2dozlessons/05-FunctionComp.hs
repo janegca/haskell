@@ -1,4 +1,4 @@
--- Ref: Two Dozen Short Lessions in Haskell by Rex Page
+-- Ref: Two Dozen Short Lessons in Haskell by Rex Page
 -- Chapter 5 Function Composition
 
 {-
