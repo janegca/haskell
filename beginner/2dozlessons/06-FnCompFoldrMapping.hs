@@ -1,4 +1,4 @@
--- Ref: Two Dozen Short Lessions in Haskell by Rex Page
+-- Ref: Two Dozen Short Lessons in Haskell by Rex Page
 -- Chapter 6 Fn Composition, Folding and Mapping
 
 import Data.Char (toLower)          -- used in mapping section below
@@ -94,7 +94,7 @@ import Data.Char (toLower)          -- used in mapping section below
         
         [f, g, h] is a 'list' or 'sequence' of functions that we
         want to apply the 'dot' operator to. Note that a list can
-        hold any elment type: String, Char, Person, etc BUT every
+        hold any element type: String, Char, Person, etc BUT every
         element in the list MUST HAVE THE SAME TYPE.
         
         In our example, f, g and h are all functions.
