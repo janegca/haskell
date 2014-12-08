@@ -220,3 +220,11 @@ qsort' p (x:xs) = qsort' p ys ++ x : qsort' p zs
                where (ys, zs) = partition (p x) xs
 qsort' _ [] = []
 
+-- insert sort - does the same as quickSort
+sorta(x : xs) = insert x (sorta xs)
+sorta [ ] = [ ]
+
+insert a (x : xs)
+    | a <= x    = [a, x] ++ xs
+    | otherwise = [x] ++ (insert a xs)
+insert a [ ] = [a]
