@@ -110,6 +110,13 @@ quickSort (x:xs) = quickSort (filter (< x) xs)
                    ++ x : quickSort (filter (>= x) xs)
 quickSort [] = []
 
+-- solution from text
+quicksort :: Ord a => [a] -> [a]
+quicksort (firstx : xs) =
+    quicksort[x | x <- xs, x < firstx] ++ [firstx] ++
+    quicksort[x | x <- xs, not(x < firstx)]
+quicksort [] = []
+
 {-
     This almost works correctly:
     
@@ -141,6 +148,23 @@ quickSort [] = []
     ["cummings","Dylan","Poe","Suess","Whitman"]
     
 -}
+
+-- solution from text
+quicksortWith precedes (firstx : xs) =
+    quicksortWith precedes [x | x <- xs, precedes x firstx] ++
+    [firstx] ++
+    quicksortWith precedes [x | x <- xs, not(precedes x firstx)]
+quicksortWith precedes [] = []
+
+precedesAlphabetically x y
+    | xLower == yLower = x < y
+    | otherwise = xLower < yLower
+    where
+        xLower = map toLower x
+        yLower = map toLower y
+
+-- my solution
+quickSortWith :: (a -> a -> Bool) -> [a] -> [a]
 quickSortWith p (x:xs) = quickSortWith p (filter (p x) xs)
                          ++ x : quickSortWith p (filter (not . (p x)) xs)
 quickSortWith _ [] = []
@@ -180,6 +204,7 @@ alphaOrder a b
         -- convert strings a and b to lowercase
         aLCase = map toLower a
         bLCase = map toLower b
+        
         
 -- using the 'partition' function from Data.List to split sequences
 -- Source:
