@@ -1,7 +1,7 @@
 -- Informatics 1 - Functional Programming 
 -- Lab week tutorial part II - Chess
---      
---
+--      Required support files can be found at:
+--           http://www.inf.ed.ac.uk/teaching/courses/inf1/fp/tutorials/Labweek.zip
 
 import PicturesSVG
 import Test.QuickCheck
