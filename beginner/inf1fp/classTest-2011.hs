@@ -72,7 +72,7 @@ g' xs = maximum (-1 : [ f x | x <- xs, isHexDigit x ])
         and recursion,  but not list comprehension or library functions.
 
         OK - blew this as my 'g' is recursive. How to do 'g' with
-        list comprehension??
+        list comprehension??  Figured it out and swapped answeres aroudn.
 -}
 h :: String -> Int
 h str = maxVal str (-1)
