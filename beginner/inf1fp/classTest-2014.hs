@@ -98,4 +98,3 @@ d (x:y:xs)   = toUpper x : y : d xs
 -}
 prop_cd :: String -> Bool
 prop_cd str = c str == d str
-
