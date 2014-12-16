@@ -1,5 +1,5 @@
 -- Informatics 1 - Functional Programming 
--- Tutorial 4 - Screen Scraping
+-- Tutorial 4 - Revies of List Comprehensions, Recursion, High Order Functions
 --
 -- Source:
 --  http://www.inf.ed.ac.uk/teaching/courses/inf1/fp/tutorials/tutorial4.zip
