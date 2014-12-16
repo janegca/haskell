@@ -2,7 +2,7 @@
 -- Tutorial 4 - Revies of List Comprehensions, Recursion, High Order Functions
 --
 -- Source:
---  http://www.inf.ed.ac.uk/teaching/courses/inf1/fp/tutorials/tutorial4.zip
+--  http://www.inf.ed.ac.uk/teaching/courses/inf1/fp/tutorials/revision/tutorial4.pdf
 --
 {-
     General Instructions
