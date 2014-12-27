@@ -20,6 +20,7 @@
 --      Haskell 2010 Language Report
 --      https://www.haskell.org/onlinereport/haskell2010/haskellch4.html#x10-680004.2
 --
+--
 {-
     Declaration for the 'elem' function
     
