@@ -1,1 +1,2 @@
-Excercises in writing basic code bits using idomatic Haskell.
+Coding exercises from various Haskell tutorials, online courses,
+books, etc.

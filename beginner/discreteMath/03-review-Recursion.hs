@@ -65,7 +65,7 @@ isSorted (x:y:zs) = x < y && isSorted (y:zs)
         Recursive Case:
             Note that the definition of factorial
                 factorial n+1 = n+1 * factorial n
-            ==> factorial n   = n   * factorial n-1
+            ==  factorial n   = n   * factorial n-1
             
             Let k = n - 1,
         
