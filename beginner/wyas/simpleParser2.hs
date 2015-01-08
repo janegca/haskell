@@ -20,7 +20,7 @@ main = do
 symbol :: Parser Char
 symbol = oneOf "!$%&|*+-/:<=?>@^_~#"
 
--- read and expression by passing the 'input', the 'lisp' parser
+-- read an expression by passing the 'input', the 'lisp' parser
 -- and our 'symbol' action to the 'parse' function
 --
 -- MODIFIED: we now want to parse using two Parser actions
