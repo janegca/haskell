@@ -55,7 +55,7 @@ import Graphics.UI.Gtk
 
 main :: IO ()
 main = do
-  initGUI   -- initialize the window system
+  initGUI   -- initialize the windowing system
   
   -- create a top level window and a horizontal layout container
   window  <- windowNew  

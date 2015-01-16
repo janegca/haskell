@@ -128,7 +128,7 @@ import Graphics.UI.Gtk
 
 main :: IO ()
 main = do
-  initGUI       -- initialize window
+  initGUI       -- initialize the windowing system
   
   -- create top level window and set attributes
   window  <- windowNew

@@ -220,7 +220,7 @@ import Control.Monad.Trans (liftIO)
 
 main :: IO ()
 main = do
-  initGUI               -- required, initializes the window system
+  initGUI               -- required, initializes the windowing system
   
   -- create a new top level window, default size 200x200
   window <- windowNew   

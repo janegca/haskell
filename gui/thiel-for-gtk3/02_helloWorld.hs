@@ -48,7 +48,7 @@ hello b = set b [buttonLabel := "Hello World"]
 
 main :: IO ()
 main = do
-  initGUI
+  initGUI       -- initialize the windowing system
   
   -- create widgets
   window <- windowNew
