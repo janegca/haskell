@@ -54,7 +54,6 @@
 
 
 import Graphics.UI.Gtk
-import Control.Monad.Trans (liftIO)
 
 main:: IO ()
 main = do
