@@ -1,4 +1,4 @@
--- Chapter 6 - Propositional Logic - Exer
+-- Chapter 6 - Propositional Logic - Exercises
 --
 -- Reference: 'Discrete Mathematics Using a Computer' by John O'Donnell,
 --             Cordelia Hall, and Rex Page
@@ -517,3 +517,62 @@ ex23f = Imp (Or (And P (Not Q)) (And (Not P) Q)) (Or P Q)
     (c) Equ (Imply P Q) (Or (Not P) Q)    (P -> Q) == (not P \/ Q)
 
 -}
+{--
+    Exercise 25
+    
+        Simplify (P /\ False) \/ (Q /\ True)
+        
+            (P /\ False) \/ (Q /\ True}
+          = False \/ (Q /\ True)            {/\ null}
+          = False \/ Q                      {/\ identity}
+          = Q \/ False                      {commutativity}*
+          = Q                               {\/ identity}
+          
+          
+        * missed this step in my original answeer; guess you have to put
+          everything in the laws original form
+
+--}
+{--
+    Exercise 26
+    
+        Prove the equation (P /\ False) /\ True = False
+        
+        (P /\ False) /\ True 
+      - False /\ True               {/\ null}
+      = False                       {/\ operation}
+        
+        [no provided solution]
+--}
+{--
+    Exercise 27
+    
+        Prove (P /\ ((Q \/ R) \/ Q)) /\ S = S /\ ((R \/ Q) /\ P)
+        
+            (P /\ ((Q \/ R) \/ Q)) /\ S
+          = S /\ (P /\ ((Q \/ R) \/ Q))         {/\ commutative}
+          = S /\ (((Q \/ R) \/ Q) /\ P)         {/\ commutative}*
+          = S /\ ((Q \/ (R \/ Q)) /\ P)         {\/ associative}*
+          = S /\ ((Q \/ (Q \/ R)) /\ P)         {\/ commutative}*
+          = S /\ ((Q \/ Q) \/ R)) /\ P)         {\/ associative|*
+          = S /\ ((Q \/ R) /\ P)                {\/ idempotent}
+          = S /\ ((R \/ Q) /\ P)                {\/ commutative}
+       
+        * originally went from (Q \/ (R \/ Q)) to
+         (Q \/ R \/ Q) to (Q \/ Q \/ R) to (Q \/ R) using associative law
+         to drop internal parentheses and commutative law to swap 
+         positions
+--}
+{--
+    Exercise 28
+    
+        Prove P /\ (Q /\ (R /\ S)) = ((P /\ Q) /\ R) /\ S
+        
+            P /\ (Q /\ (R /\ S))
+          = P /\ (Q /\ R /\ S)              {/\ associative}
+          = P /\ Q /\ R /\ S                {/\ associative}
+          = (P /\ Q) /\ R /\ S              {/\ associative}
+          = ((P /\ Q) /\ R ) /\ S           {/\ associative}
+          
+    [no provided solution]
+--}

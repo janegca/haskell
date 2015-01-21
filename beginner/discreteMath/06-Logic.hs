@@ -98,10 +98,10 @@ import Stdm     -- need to run under Hugs Haskell 98
          if A is False, then B is False   - is a true statement, A == B
          if A is False, then B is True    - B can be true even if A is false
          if A is True,  then B is False   - B can be false even if A is true
-         if A is True, then B is True     - is a true statement, A == B
+         if A is True,  then B is True     - is a true statement, A == B
          
          most languages 'short circuit' logical operations so if they
-         see A is False they won't even bother to look a B never mind
+         see A is False they won't even bother to look at B never mind
          execute it; the truth table captures this 'indifference' to B
          
         i.e. B will only be executed if A is True so it is only the
@@ -237,9 +237,9 @@ import Stdm     -- need to run under Hugs Haskell 98
             if all the propositions are true, then Q is true
             
         P |= Q -> P
-            if P is thre then Q -> P is true
+            if P is true then Q -> P is true
     
-        From Natural Dedcution:
+        From Natural Deduction:
         
         P1, P2, P3, ... |- Q  
         
@@ -316,7 +316,7 @@ import Stdm     -- need to run under Hugs Haskell 98
         
         Example
             not False = False -> False = True
-            not True  = True -> False = (False -> False) -> False
+            not True  = True -> False  = (False -> False) -> False
             
     Inference proofs have a natural tree structure, with the assumptions
     forming the leaves and the subproofs, the nodes (forks)
@@ -484,5 +484,58 @@ import Stdm     -- need to run under Hugs Haskell 98
     inference rules.
         
 -}
+-- 6.7 BOOLEAN ALGEBRA: EQUATIONAL REASONING -----------------------------
+{-
+    We've seen two approaches to 'propositional logic': the 'semantic'
+    approach with 'truth tables' and the 'syntactic' approach with
+    'inference rules'. A third major system is, Boolean algebra, is an
+    'axiomatic' approach to logic.
+    
+    Boolean Algebra is based on a set of equations that describe the
+    algebraic properties of propositions; the equations are 'laws';
+    a 'law' is a proposition that is always true for every possible
+    assignment of truth values to the logical variables.
+    
+    Operations with Constants
+    -------------------------
+            a /\ False = False      {/\ null}
+            a \/ True  = True       {\/ null}
+            a /\ True  = a          {/\ identity}
+            a \/ False = a          {\/ identity}
+            
+    Basic properties of /\ and \/
+    -----------------------------
+                a -> a \/ b            {disjunctive implication}
+           a /\ b -> a                 {conjunctive implication}
+           a /\ a =  a                 {/\ idempotent}
+           a \/ a =  a                 {\/ idempotent}
+           a /\ b = b /\ a             {/\ commutative}
+           a \/ b = b \/ a             {\/ commutative}
+    (a /\ b) /\ c = a /\ (b /\ c)      {/\ associative}
+    (a \/ b) \/ c = a \/ (b \/ c)      {\/ associative]
+    
+    'Commutative' properties are often needed to rewrite an expression
+    in a form that lets you use another identity.
+    
+    'Associative' operators give the same result regardless of grouping;
+    allows for removable of parentheses (but only if SAME operator is
+    involved).
+    
+    Distributive and DeMorgan's Laws
+    --------------------------------
+    
+        a /\ (b \/ c) = (a /\ b) \/ (a /\ c)    {/\ distributes over \/}
+        a \/ (b /\ c) = (a \/ b) /\ (a \/ c)    {\/ distributes over /\}
+         not (a /\ b) = not a \/ not b          {DeMorgan's Law}
+         not (a \/ b) = not a /\ not b          {DeMorgan's Law}
+    
+    Laws on Negation
+    ----------------
+            not True = False            {negate True}
+           not False = True             {negate False}
+        a /\ (not a) = False            {/\ complement}
+        a \/ (not a) = True             {\/ complement}
+          not(not a) = a                {double negation}
 
+-}
 
