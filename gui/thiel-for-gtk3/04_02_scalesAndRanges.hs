@@ -218,7 +218,7 @@ makeScaleValuePosComboBox = do
     
 -- toggle the display of the digits on the three sample scales    
 toggleDisplay :: ScaleClass self => CheckButton -> [self] -> IO ()
-toggleDisplay b scls = sequence_ (map change scls) 
+toggleDisplay b scls = mapM_ change scls
     where
         change sc = do st <- toggleButtonGetActive b
                        scaleSetDrawValue sc st

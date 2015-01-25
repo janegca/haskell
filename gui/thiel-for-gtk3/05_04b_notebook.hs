@@ -48,7 +48,7 @@ main= do
               notebookTabPos      := PosRight ] -- position tabs on right
 
     stls <- stockListIds                        -- get stock image ids
-    sequence_ (map (myNewPage ntbk) stls)
+    mapM_ (myNewPage ntbk) stls
     
     -- add the notebook to the application window
     containerAdd window ntbk

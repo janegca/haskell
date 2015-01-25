@@ -64,7 +64,7 @@ buildContent mb win = do
     
     -- register signal handlers
     randomButton info randstore play
-    sequence_ (map (actionButton info randstore) tblBtns)  
+    mapM_ (actionButton info randstore) tblBtns 
     on quit buttonActivated (widgetDestroy win)
     
     -- layout the widgets and add to the main window
