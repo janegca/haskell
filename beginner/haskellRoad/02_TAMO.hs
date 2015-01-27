@@ -11,7 +11,7 @@
         
 -}
 {-# LANGUAGE FlexibleInstances #-}
-module TAMO where
+
 {-
     TRUTH TABLES
     
@@ -176,7 +176,7 @@ valid4 bf = and [ bf p q r s | p <- [True, False],
         /\ and \/ bind more strongly than
         => and <=>
         
-        In Haskell, (highert the precedence, stronger the binding)
+        In Haskell, (higher the precedence, stronger the binding)
             ==      binding precedence is 4
             &&      binding precedence is 3
             ||      binding precedence is 2
@@ -191,7 +191,7 @@ valid4 bf = and [ bf p q r s | p <- [True, False],
 {-
     Logical Equivalence
         Two formulas are logically equivalent if, given the same
-        truth values, the produce the same result.
+        truth values, they produce the same result.
         
         An example is the 'First Law of De Morgan'
             not (P && Q) <=> (not P || not Q)                        
@@ -258,7 +258,7 @@ class TF p where
     lequiv  ::  p -> p -> Bool
     
 -- an 'instance' for a truth function with no parameters
---      a truth function with now parameters is a constant, either
+--      a truth function with no parameters is a constant, either
 --      True or False
 instance TF Bool
     where
@@ -487,9 +487,216 @@ test16 = lequiv (\ p -> p && (not p)) (const False)
 checkTest11_16 = and [test10a, test10b, test11a, test13a, test13b,
                       test14a, test14b, test15,  test16]  -- True
                       
+{-
+    SUBSTITUTION PRINCIPLE
+    
+    If two expressions, phi and psi, are equivalent and phi' and psi'
+    are the result of substituting a value, xi, for P in both expressions
+    then phi' and psi' are equivalent.
+    
+    eg if we have:
+            not (P => Q) equivalent to P /\ (not Q)
+            
+        and we substitute (not P) for P, then
+            not ((not P) => Q) is equivalent to (not P) /\ (not Q)
+    
+-}
+ex214  = lequiv (\p q -> not (p ==> q)) (\p q -> p && (not q))
+ex214a = lequiv (\p q -> not ((not p) ==> q)) 
+                (\p q -> (not p) && (not q))
 
+--
+-- Exercise 2.15
+--      A propositional contradictions is a formula that yields
+--      False for every combination of truth values. Write contradiction
+--      tests for propositional functions with one, two or three 
+--      variables.
+contra1 :: (Bool -> Bool) -> Bool
+contra1 bf = (bf True) == False && (bf False) == False
 
+contra2 :: (Bool -> Bool -> Bool) -> Bool
+contra2 bf = (bf True True)   == False
+          && (bf True False)  == False
+          && (bf False True)  == False
+          && (bf False False) == False
+          
+contra3 :: (Bool -> Bool -> Bool -> Bool) -> Bool
+contra3 bf = (bf True  True  True)  == False
+          && (bf True  True  False) == False        
+          && (bf True  False True)  == False
+          && (bf True  False False) == False       
+          && (bf False True  True)  == False
+          && (bf False True  False) == False
+          && (bf False False True)  == False
+          && (bf False False False) == False  
 
+-- using list comprehensions          
+contrad2 :: (Bool -> Bool -> Bool) -> Bool
+contrad2 bf = and [not (bf p q) | p <- [True,False], q <- [True,False]]
+
+contrad3 :: (Bool -> Bool -> Bool -> Bool) -> Bool
+contrad3 bf = and [ not (bf p q r) | p <- [True,False],
+                                     q <- [True,False],
+                                     r <- [True,False]]          
                                                     
+{- 
+    Exercise 2.20
+        Determine if the following are equivalent using truth tables
+        or equivalences. Check you answer by computer
+-}
+ex2201 = lequiv (\p q -> (not p) ==> q) (\p q -> p ==> (not q))
+ex2202 = lequiv (\p q -> (not p) ==> q) (\p q -> q ==> (not p))
+ex2203 = lequiv (\p q -> (not p) ==> q) (\p q -> (not q) ==> p)
+ex2204 = lequiv (\p q r -> p ==> (q ==> r)) (\p q r -> q ==> (p ==> r))
+ex2205 = lequiv (\p q r -> p ==> (q ==> r)) (\p q r -> (p ==> q) ==> r)
+ex2206 = lequiv (\p q -> (p ==> q) ==> p) (\p q -> p)
+ex2207 = lequiv (\p q r -> p || q ==> r) 
+                (\p q r -> (p ==> r) && (q ==> r))
+                
+{-
+    Open Formula
+        A formula with one or more unbound variables.
+        
+    Bound Variable
+        Quantifier expressions are said to bind every occurrence of
+        their variables in their scope. If a variable is bound
+        to a certain expression then the meaning of the expression
+        doesn't change when all bound occurrences of the variable
+        are replaced with another one.
+        
+        i.e. the choice of the 'variable name' has no effect on the
+             meaning of the expression
+             
+        In the two examples below, the list comprehensions produce
+        exactly the same results even though the variables used
+        in each are different -- the 'meaning' of the expressions
+        does not depend on the variable names. Each variable is
+        'bound' in the expression it appears in and its value
+        in one function does not impinge on its value in another.
 
+-}                
+bindEx1 = sum [x | x <- [1..15]]    == sum [y | y <- [1..15]]
+bindEx2 = [x | x <- [1..10], odd x] == [y | y <- [1..10], odd y]
+                
+{-
+    Lambda Abstractions
+        Have the form: 
+            (\ v -> body )
+        where
+            v    is a variable of the argument type, and
+            body is an expression of the result type
+            
+        (\ v -> \w -> body) may be written as (\v w -> body)
+        
+        Arguments can also be tuples, see 'solveQdr' below
+-}                
+solveQdr :: (Float, Float, Float) -> (Float, Float)
+solveQdr = \ (a,b,c) -> if a == 0 
+                        then error "not quadratic"
+                        else
+                            let d = b^2 - 4*a*c 
+                            in if d < 0 
+                               then error "no real solution"
+                               else
+                                ( (- b + sqrt d) / 2 * a,
+                                  (- b - sqrt d) / 2 * a)
+                                  
+-- ex: solve x^2 - x - 1 = 0                                  
+exSQ = solveQdr (1, -1, -1)     -- result: (1.618034,-0.618034)
 
+{-
+    Quantifiers as Procedures
+    
+    A universal quantifier can be looked at as a procedure to test
+    whether a set has a certain property; returning true if the
+    entire domain of the set has the property while a restricted
+    universal quantifier returns true if all members of a given set, A, 
+    have the given property, P. (In Haskell, the 'all' function)
+    
+    The existential quantifier takes a set and returns true if the
+    set is non-empty. A restricted existential quantifier takes a 
+    set, A, and a property, P, and returns true if the set of members
+    of A that satisfy P is non-empty. (In Haskell, the 'any' function)
+    
+    'any' and 'all' are predefined in Haskell as:
+    
+        any, all :: (a -> Bool)       -- predicate (property) to test
+                 -> [a]               -- set (list of elements to test)
+                 -> Bool              -- result, True or False
+        any p   = or  . map p    -- apply (map) the predicate function
+                                 -- to all the list elements and combine
+                                 -- the True/False results by 'or'ing 
+                                 -- them together i.e. return 'True'
+                                 -- if at least one element satisfied
+                                 -- the predicate (has the required
+                                 -- property)
+        
+        all p   = and . map p    -- apply (map) the predicate function
+                                 -- to all the list elements and combine
+                                 -- the True/False results by 'and'ing
+                                 -- them together i.e. return 'True' only
+                                 -- if ALL elements satisfied the predicate
+                                 -- (have the required property)
+                                 
+    [Note: the dot operator (.) is the 'function composition' operator
+           in Haskell. The above are equivalent to:
+            any p xs = or(map p xs)
+            all p xs = and(map p xs) ]
+-}                                  
+exAny = any (<3) [1..10]        -- are any elements in the list of 1 to 10
+                                -- less than the number 3?
+exAll = all (<3) [1..10]        -- are all elements in the list of 1 to 10
+                                -- less than the number 3?
+                                
+{-
+    We can write two functions that are built from 'all'
+    and 'any' whose names give the same 'sense' as the meanings of
+    'all' (every) and 'any' (some):
+    
+        every, some :: [a] -> (a -> Bool) -> Bool
+        every xs p = all p xs
+        some  xs p = any p xs
+        
+    Note that the parameters are in the reverse order of 'all' and 'any'
+-}                           
+every, some :: [a] -> (a -> Bool) -> Bool
+every xs p = all p xs
+some  xs p = any p xs     
+
+-- is every number in the list [1,4,9] a square of some element
+-- in the list [1,2,3]? [Note: 'x' will be drawn from [1,4,9]
+-- while 'y' is drawn from [1,2,3]]
+exEvery = every [1,4,9] (\x -> some [1,2,3] (\y -> x == y^2))
+
+--
+-- Exercise 2.51
+--   Define a function unique :: (a -> Bool) -> [a] -> Bool that
+--   returns True for 'unique p xs' just in case there is exactly
+--   one object among xs that satisfies p
+unique :: (a -> Bool) -> [a] -> Bool
+unique p xs = length [x | x <- map p xs, x == True] == 1
+
+-- provided solution
+unique' :: (a -> Bool) -> [a] -> Bool
+unique' p xs = length (filter p xs) == 1
+
+--
+-- Exercise 2.52
+--  Define a function parity :: [Bool] -> Bool that gives True for
+--  parity xs just in case an even number of the xs's equals True
+--
+parity :: [Bool] -> Bool
+parity xs = mod (length (filter (== True) xs)) 2 == 0
+
+-- provided solution
+parity' :: [Bool] -> Bool
+parity' []     = True
+parity' (x:xs) = x /= (parity xs)
+
+-- 
+-- Exercise 2.53
+--  Define a function evenNR :: (a -> Bool) -> [a] -> Bool that
+--  gives True for evenNR p xs just in case an even number of the xs's
+--  have property p. (Use the parity function from the previous exercise)
+evenNR :: (a -> Bool) -> [a] -> Bool
+evenNR p = parity' . map p
