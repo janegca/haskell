@@ -1,3 +1,17 @@
+{-
+    SOE.hs is part of the SOESolutions.zip file (available from the
+    book website). 
+    
+    This file has added comments and has been slightly modified:
+    
+        getKey  - changed 'if ch == '\x0' to 'if ch /= '\x0'
+        Word32  - all references changed to Word64 for use with 64-bit
+                  system
+
+    Reference:
+        'The Haskell School of Expression' by Paul Hudak
+        http://www.cs.yale.edu/homes/hudak/SOE/index.htm
+-}
 module SOE (
   runGraphics,
   Title,
@@ -45,13 +59,13 @@ module SOE (
   Event (..),
   maybeGetWindowEvent,
   getWindowEvent,
-  Word32,
+  Word64,
   timeGetTime,
   word32ToInt
   ) where
 
 import Data.Ix (Ix)
-import Data.Word (Word32)
+import Data.Word (Word64)
 import Concurrent
 import qualified System.Time
 import qualified Graphics.UI.GLFW as GLFW
@@ -239,6 +253,8 @@ text (x,y) str = Graphic $ GL.preservingMatrix $ do
 
 type Point = (Int, Int)
 
+-- draw an ellipse in a rectangle whose upper-left corner is
+-- a p1, bottom-right corner is at p2
 ellipse :: Point -> Point -> Graphic
 ellipse pt1 pt2 = Graphic $ GL.preservingMatrix $ do
   let (x, y, width, height) = normaliseBounds pt1 pt2
@@ -246,6 +262,7 @@ ellipse pt1 pt2 = Graphic $ GL.preservingMatrix $ do
   GL.translate (GL.Vector3 (x + r1) (y + r2) 0)
   GL.renderPrimitive GL.Polygon (circle r1 r2 0 (2 * pi) (20 / (r1 + r2)))
       
+-- draw an ellipse within the parallelogram formed by the three vertices      
 shearEllipse :: Point -> Point -> Point -> Graphic
 shearEllipse p0 p1 p2 = Graphic $ 
   let (x0,y0) = fromPoint p0
@@ -263,24 +280,31 @@ shearEllipse p0 p1 p2 = Graphic $
   in GL.renderPrimitive GL.Polygon $ 
         mapM_ (\ (x, y) -> GL.vertex (vertex3 x y 0)) pts
 
+-- draw a straight line from the first point to the second        
 line :: Point -> Point -> Graphic
 line (x1, y1) (x2, y2) = Graphic $ 
   GL.renderPrimitive GL.LineStrip (do
     GL.vertex (vertex3 (fromIntegral x1) (fromIntegral y1) 0)
     GL.vertex (vertex3 (fromIntegral x2) (fromIntegral y2) 0))
 
+-- draw a closed polygon with vertices [Point]; the last vertice is
+-- connected to the first    
 polygon :: [Point] -> Graphic
 polygon ps = Graphic $ do
   GL.renderPrimitive GL.Polygon (foldr1 (>>) (map 
     (\ (x, y) -> GL.vertex (vertex3 (fromIntegral x) (fromIntegral y) 0))
     ps))
 
+-- connects each successive vertex by a straight linebut does not close 
+-- the figure (last point is not connected with the first)    
 polyline :: [Point] -> Graphic
 polyline ps = Graphic $ 
   GL.renderPrimitive GL.LineStrip (foldr1 (>>) (map 
     (\ (x, y) -> GL.vertex (vertex3 (fromIntegral x) (fromIntegral y) 0))
     ps))
 
+-- like 'polyline' but uses Bezier curves to connect the points instead
+-- of straight lines    
 polyBezier :: [Point] -> Graphic
 polyBezier [] = Graphic $ return ()
 polyBezier ps = polyline (map (bezier ps) (segment 0 1 dt))
@@ -502,12 +526,12 @@ getRBP :: Window -> IO Point
 getRBP w = getButton w 2 True
 
 -- use GLFW's high resolution timer
-timeGetTime :: IO Word32
+timeGetTime :: IO Word64
 timeGetTime = do
   timeInSec <- GL.get GLFW.time
   return $ round $ timeInSec * 1000
 
-word32ToInt :: Word32 -> Int
+word32ToInt :: Word64 -> Int
 word32ToInt = fromIntegral
 
 ----------------------
