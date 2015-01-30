@@ -576,3 +576,48 @@ ex23f = Imp (Or (And P (Not Q)) (And (Not P) Q)) (Or P Q)
           
     [no provided solution]
 --}
+-- Exercises in Equational Reasoning -------------------------------------
+{-
+    Exercise 30
+        Prove (A \/ B) /\ B -> B
+        
+    Provided solution:
+        (A \/ B) /\ B
+      = (A \/ B) /\ (B \/ False)            {\/ identity}
+      = (B \/ A) /\ (B \/ False)            {\/ commutativity}
+      = B \/ (A /\ False)                   (\/ over /\}
+      = B \/ False                          {/\ null}
+      = B                                   {\/ identity}
+      
+-}
+{-
+    Exercise 31
+        Prove:   (not A && B) || (A && not B)
+              <->(A || B)     && not(A && B)
+              
+        
+        (not A && B) || (A && not B)
+      = ((not A && B) || A) && ((not A && B) || not B)      {|| over &&}
+      = ( A || (not A && B) && ( not B || (not A && B)      {|| comm.}
+      = ((A || not A) && (A || B) && ((not B || not A) && 
+                                     ((not B || B))         {|| over &&}
+      = ( True && (A || B) && ((not B || not A) && True)    {|| compl.}
+      = ( (A || B) && True) && (not B || not A) && True)    {|| comm}
+      = (A || B) && (not B || not A)                        {&& id}
+      = (A || B) && (not A || not B)                        {|| comm}
+      = (A || B) && not(A || B)                             {dist. mult.}
+                                          
+-}
+{-
+    Exercise 32
+        Prove:  not(A && B) <-> not A || not B
+        Note: this is DeMorgan's law, do not use it as the proof
+        
+        Provided Solution:
+        
+        not(A && B)
+      = not(not not A && not not B)         {double negation appl. twice}
+      = not(not(not A || not B))            {distribution}
+      = not A || not B
+
+-}

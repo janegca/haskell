@@ -1,3 +1,14 @@
+{-
+    Chapter 4 - Sets, Types and Lists
+    
+    File source: http://homepages.cwi.nl/~jve/HR/#Solutions
+    
+    References:
+        "The Haskell Road to Logic, Maths and Programming, 2nd Edition"
+        by Kees Doets, Jan van Eijck, College Publications, UK, 2012
+       
+-}
+
 module DB 
 
 where

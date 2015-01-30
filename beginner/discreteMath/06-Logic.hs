@@ -496,6 +496,14 @@ import Stdm     -- need to run under Hugs Haskell 98
     a 'law' is a proposition that is always true for every possible
     assignment of truth values to the logical variables.
     
+    [Note: An 'equation' is a statement in the meta-language about
+           propositions that are expressed in an object language.
+           
+           P /\ P -> P      is a proposition
+           P /\ P =  P      is an equation whose left and right sides
+                            are propositions 
+    ]
+    
     Operations with Constants
     -------------------------
             a /\ False = False      {/\ null}
@@ -536,6 +544,95 @@ import Stdm     -- need to run under Hugs Haskell 98
         a /\ (not a) = False            {/\ complement}
         a \/ (not a) = True             {\/ complement}
           not(not a) = a                {double negation}
-
+          
+    Laws on Implication
+    -------------------
+        a /\ (a->b) -> b                {Modus Ponens}
+    (a -> b) /\ not b -> not a          {Modus Tollens}
+     (a \/ b) /\ (not a) -> b           {disjunctive syllogism}
+    (a -> b) /\ (b -> c) -> a -> c      {implication chain}
+    (a -> b) /\ (c -> d) -> 
+        (a /\ c) -> (b /\ d)            {implication combination}
+        
+    (a /\ b) -> c = a -> b -> c         {Currying}
+           a -> b = (not a) \/ b        {Implication}
+           a -> b = (not b) \/ (not a)  {contrapositive}
+    (a -> b) /\ (a -> not b) = not a    {absurdity}      
+    
+    For the absurdity law, if we know 'a -> b' and 'a -> (not b)'
+    then 'a' MUST BE FALSE, as 'b /\ not b' CANNOT BE TRUE
+    
+   Equivalence
+   -----------
+        a <-> b = (a -> b) /\ (b -> a)
 -}
+{-
+    6.8 Logic in CS
+    
+    Logic is used in:
+        - checking for the formal correctness of software
+        - type checking; the connection between the inference
+          rules of logic and type checking was discovered in the 1950's
+          by Curry and Howard
+        - the rules of linear logic can be applied to computer
+          resources utilization
+        - discrete math is essential to the design of computer
+          hardware circuits
+                         
+-}
+{-
+    6.9 Meta-Logic
+        - helps us talk about logic
+        - the three different methods we've used to reason about
+          propositions are:
+          
+          Truth-tables    - allow us to calculate the values (meanings)
+                            of propositions
+          Inference rules - enable us to prove theorems
+          Boolean Algebra - allows using equational reasoning to determine
+                            the equality of two expressions and to 
+                            calculate the values of expressions
+                            
+        - the two fundamental operators of meta-logic are: |= and |-
+            P1,P2,...,Pn |- Q means there is a proof that infers Q from
+                              the propositions P1..Pn
+                              
+            P1,P2,...,Pn |= Q means that Q must be true if P1..Pn
+                              are True but says nothing about whether
+                              or not we have a proof, need a proof or
+                              if a proof is even possible
+                              
+        Consistent
+        ----------
+            A formal system is consistent if
+                If a |- b then a |= b
+                
+            i.e. the system is consistent if each proposition provable
+                 by inference rules is actually True
+                      
+        Complete
+        --------
+            A formal system is complete if the following is true
+            for all well formed formulas 'a' and 'b'
+                If a |= b then a |- b
+                
+            i.e. the system is complete if the inference rules are
+                 powerful enough to prove every proposition True
+                 
+        PROPOSITIONAL LOGIC IS BOTH CONSISTENT AND COMPLETE. You cannot
+        use it to prove a false theorem and if a theorem is True you
+        have a proof.
+        
+        Another logical system that is consistent and complete is
+        'predicate logic' (covered in Chapter 7)
+        
+        Godel's Theorem
+        ---------------
+            Any logical system powerful enough to express ordinary
+            arithmetic is either inconsistent or incomplete; hence,
+            all of mathematics cannot be captured in a logical system.
+            
+                              
+          
+-_
 

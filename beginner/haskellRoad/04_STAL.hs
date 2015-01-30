@@ -8,6 +8,7 @@
 -}
 import Data.List
 import DB
+import SetEq
 
 {-
     The Comprehension Principle
@@ -356,7 +357,62 @@ genUnion []       = []
 genUnion [xs]     = xs
 genUnion (xs:xss) = union xs  (genUnion xss)
 
+-- provided solution
 genIntersect :: Eq a => [[a]] -> [a]
 genIntersect []       = error "list of lists should be non-empty"
 genIntersect [xs]     = xs
 genIntersect (xs:xss) = intersect xs (genIntersect xss)
+
+{-
+    A drawback of using Lists as Sets is in the way they define
+    equality; two lists with identical members in a different
+    order are NOT EQUAL while two sets with the same members, 
+    regardless of order, ARE EQUAL.
+    eg [1,2,3] /= [3,2,1]  {1,2,3} == {3,2,1}
+    
+    The 'SetEq' module defines a special data type for sets
+    using lists to overcome this difficulty.
+-}
+--
+-- Exercise 4.54
+--  Give implementations of the operations unionSet, intersectSet
+--  and differenceSet in terms of inSet, insertSet and deleteSet
+--
+-- provided solution
+unionSet :: (Eq a) => Set a -> Set a -> Set a
+unionSet (Set [])     set2 = set2
+unionSet (Set (x:xs)) set2 =
+    insertSet x (unionSet (Set xs) (deleteSet x set2))
+
+-- provided solution    
+intersectSet :: (Eq a) => Set a -> Set a -> Set a
+intersectSet (Set []) set2 = Set []
+intersectSet (Set (x:xs)) set2
+    | inSet x set2 = insertSet x (intersectSet (Set xs) set2)
+    | otherwise    = intersectSet (Set xs) set2    
+    
+-- provided solution    
+differenceSet :: (Eq a) => Set a -> Set a -> Set a
+differenceSet set1 (Set []) = set1
+differenceSet set1 (Set (y:ys)) =
+    differenceSet (deleteSet y set1) (Set ys)    
+    
+-- 
+-- Exercise 4.55
+--  In an implementation of sets as lists without duplicates, the
+--  implementation of insertSet has to be changed. How?
+-- provided solution: need to maintain the underlying list sort
+insertSet' :: (Ord a) => a -> Set a -> Set a
+insertSet' x (Set s) = Set (insertList x s)
+
+insertList x [] = [x]
+insertList x ys@(y:ys') = case compare x y of
+                            GT -> y : insertList x ys'
+                            EQ -> ys
+                            _ -> x : ys    
+                            
+--
+-- Exercise 4.56
+--  What would have to change in the module SetEq.hs to get a 
+--  representation of the set as 0?
+--                             
