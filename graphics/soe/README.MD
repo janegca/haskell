@@ -1,6 +1,6 @@
 Exercises from <a href="http://www.cs.yale.edu/homes/hudak/SOE/index.htm">
 The Haskell Scool of Expression</a>
-</ p>
+
 <h3>Note</h3>
 When the files are loaded using <i>ghci</i> there are a number
 of <i>linking</i> warnings related to openGL; these only occur the first 
