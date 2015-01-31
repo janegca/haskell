@@ -12,6 +12,7 @@ module Draw( inchToPixel
            , yWin
            , trans
            , shapeToGraphic
+           , withColor
            , spaceClose
            ) where
 
