@@ -40,13 +40,13 @@ documentation which will be ignored by the compiler.
 			 Operator Precedence
 -------------------------------------------------------------------------------
 
-> infix 1 <=>
-> infix 2 ==>
-> infix 3 \/
-> infix 4 /\
-> infix 3 +++
-> infix 4 ~~~
-> infix 4 ***
+> infix 1 <=>   -- equivalence
+> infix 2 ==>   -- implication
+> infix 3 \/    -- Or
+> infix 4 /\    -- And
+> infix 3 +++   -- Union
+> infix 4 ~~~   -- Difference
+> infix 4 ***   -- Intersect
 > infix 5 !!!
 
 -------------------------------------------------------------------------------

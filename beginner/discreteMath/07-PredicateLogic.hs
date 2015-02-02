@@ -217,7 +217,7 @@ ex8 = exists [1,2,3] inner_fun
     
         F(x)   {x arbitrary}                (all x).F(x)
         --------------------{all I}         ------------{all E}
-        (all x).F(x)                             F(p)
+            (all x).F(x)                        F(p)
         
         
             F(p)
@@ -231,7 +231,92 @@ ex8 = exists [1,2,3] inner_fun
                                
     We always assume the universe is non-empty.
     
+    Universal Introduction
+    ----------------------
+        A standard proof technique is to state and prove a property
+        about an arbitrary element of a universe and then claim
+        the property holds for all members of the universe. 
+        
+        The use of 'arbitrary' values usually implies 'forall'
+        
+    Example:
+        A simple theorem about lists in Haskell says there are
+        two ways of adding a single element to the beginning of
+        a list:
+        
+            Let x :: a  and xs :: [a], then x:xs = [x] ++ xs
+            
+        This could also be written as:
+        
+            (all x)::a. (all xs)::[a]. Then x:xs = [x] ++ xs
+            
+        (++) is defined as:
+        
+                (++) :: [a] -> [a] -> [a]
+                [] ++ ys     = ys                       (1)
+                (x:xs) ++ ys = x : (xs ++ ys)           (2)
+            
+        And the proof, which works for either of the above
+        notations, is:
+        
+            [x] ++ xs
+         =  (x:[]) ++ xs            {def of notation}
+         =  x:([] ++ xs)            (++).2
+         =  x:xs                    (++).1
+            
+        i.e. if we can prove something is true for arbitrary values
+             we can infer the same is true for all possible values
+             of those variables.
+             
+        The 'all' introduction rule cannot be used if the proof is
+        based on particular values. A 'free' (unbound by a quantifer) 
+        variable is NOT arbitrary.
+        
+    Universal Elimination
+    ---------------------
+        This rule says that if you established (proved?) (all x).F(X)
+        and 'p' is a 'particular' element in the universe of 'x'
+        the you can infer F(p).
+        
+    Existential Introduction
+    ------------------------
+        The rules says that if f(p) has been established for a
+        particular 'p' then you can infer (exists x).f(x).
+        
+        i.e. if you can prove one member of the universe has a
+             property then you can infer there exists at least
+             one (arbitrary?) element with that property.
+             
+    Existential Elimination
+    -----------------------
+        If we know F(p_i) holds for some 'i' and that A must
+        hold if F(x) holds for arbitrary x, then we can infer A.
+    
+-}
+{-
+    Algebraic Laws of Predicate Logic
+    ---------------------------------
+        (all x).f(x) -> f(c)
+                f(c) -> (exists x).f(x)
+                
+        (all x). not f(x) = not (exists x).f(x)
+      (existx x).not f(x) = not (all x).f(x)
+        
+       Provided that 'x' does not occur free in 'q' ('q' does
+       not contain 'x'):
+       
+        ((all x).f(x)) /\ q = (all x).(f(x) /\ q)
+        ((all x).f(x)) \/ q = (all x).(f(x) \/ q)
+     ((exists x).f(x)) /\ q = (exists x).(f(x) /\ q)
+     ((exists x).f(x)) \/ q = (exists x).(f(x) \/ q)
+     
+    ((all x).f(x)) /\ ((all x).g(x)) =  (all x).(f(x) /\ g(x))
+    ((all x).f(x)) \/ ((all x).g(x)) -> (all x).(f(x) \/ f(x))
+           (exists x).(f(x) /\ g(x)) -> (existx x).f(x) /\ (exists x).g(x)
+    ((exists x).f(x)) \/ ((exists x).g(x)) = (exists x).(f(x) \/ g(x))
     
     
-    
+        
+        
+
 -}
