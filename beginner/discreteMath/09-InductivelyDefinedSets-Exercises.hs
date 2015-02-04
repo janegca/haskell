@@ -540,11 +540,6 @@ ex30a = ss 10
     3. n in SSN /\ n == x -> n + 2 in SSN
     4. Nothing else is in SSN unless it can be shown to be in SSN by a
        finite number of uses of rules (1), (2) and (3).
-       
-    GOOFED - should have used the rules that were given instead of
-             trying to work them out; also, trying to generate a
-             Set with all sets of natural numbers, each less 'x'; NOT
-             a single set with a missing 'x'. READ THE QUESTION!
     
     Provided Solution:
 

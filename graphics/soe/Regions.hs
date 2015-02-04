@@ -3,6 +3,10 @@
     
     Shapes and Regions are 'sets of points on some surface'; for us,
     the 'surface' is the Cartesian plane.
+    
+    Translation moves a point (x,y) to a point (x+u, y+v)
+    
+    Scaling moves a point (x,y) to a point (x*u, y*v)
 
     Reference:
         'The Haskell School of Expression' by Paul Hudak
@@ -67,8 +71,24 @@ isLeftOf :: Coordinate -> Ray -> Bool
         (u,v) = (px - bx, py - by)
     in s * v >= t * u
     
- 
+containsR :: Region -> Coordinate -> Bool    
+(Shape s)      `containsR` p = containsS s p
+(Complement r) `containsR` p = not(containsR r p)
+Empty          `containsR` p = False
+
+-- to check if a point is in  a translated region, reverse the 
+-- translation and checks if the point is in the untranslated region
+(Translate (u,v) r) `containsR` (x,y) =
+    containsR r (x-u,y-v)
+
+-- to check if a point is in a scaled region, reverse the scale
+-- and see if it is in the unscaled region    
+(Scale (u,v) r) `containsR` (x,y) =
+    containsR r (x/u, y/v)
     
+-- to check if a point is in a union of two regions, check
+-- if it is in either region; for an intersect, check if it is
+-- in both regions
+(Union r1 r2)    `containsR`  p = (containsR r1 p) || (containsR r2 p)
+(Intersect r1 r2) `containsR` p = (containsR r1 p) && (containsR r2 p)
 
-
-containsR = undefined
