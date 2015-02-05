@@ -625,5 +625,311 @@ ex31d2 = symmetricClosure( transitiveClosure(
     ([1,2,3],[(2,3),(1,3),(1,1),(2,2),(3,2),(2,1),(3,1),(1,2)])
     Main>     
 
--}            
-            
+-}    
+--
+-- ORDER RELATIONS ------------------------------------------------------
+--
+{-
+    Exercise 32
+        Work out by hand whether the following digraphs are partial
+        orders, and then check your results using the computer:
+        
+        isPartialOrder ([1,2,3], [(1,2),(2,3)])
+        
+        not reflexive, so not a partial order
+        
+        isPartialOrder ([1,2,3], [(1,2),(2,3),(1,3),(1,1),(2,2),(3,3)])
+        
+        reflexive (includes (1,1), (2,2) and (3,3)
+        antisymmetric 
+        transitive 1 to 2 to 3 therefore 1 to 3 which is included
+-}
+ex32a = isPartialOrder ([1,2,3], [(1,2),(2,3)])
+ex32b = isPartialOrder ([1,2,3], [(1,2),(2,3),(1,3),(1,1),(2,2),(3,3)])
+
+{-
+    Output:
+    
+        Main> ex32a
+        False
+        Main> ex32b
+        True
+        Main>     
+-}      
+{-
+    Exercise 33
+    
+    Calculate the following by hand, and then evaluate using the
+    computer:
+    
+                    2 --- 3       2 precedes 3, so 3 is greatest
+                    \     /
+                       1          1 precedes 2 and 3 so weakest
+
+    isWeakest [(1,2),(2,3),(1,3),(1,1),(2,2),(3,3)] 2  -- False
+    isWeakest [(1,2),(1,3),(1,1),(2,2),(3,3)] 3        -- False
+    
+    isGreatest [(1,2),(2,3),(1,3),(1,1),(2,2),(3,3)] 3  -- True
+    isGreatest [(1,2),(1,3),(1,1),(2,2),(3,3)] 1        -- False
+
+-}
+ex33a = isWeakest [(1,2),(2,3),(1,3),(1,1),(2,2),(3,3)] 2
+ex33b = isWeakest [(1,2),(1,3),(1,1),(2,2),(3,3)] 3
+ex33c = isGreatest [(1,2),(2,3),(1,3),(1,1),(2,2),(3,3)] 3
+ex33d = isGreatest [(1,2),(1,3),(1,1),(2,2),(3,3)] 1    
+      
+{-
+    Output:
+    
+        Main> ex33a
+        False
+        Main> ex33b
+        False
+        Main> :r
+        Main> ex33c
+        True
+        Main> ex33d
+        False
+    
+-}       
+{-
+    Exercise 34
+    
+    Calculate the following by hand, and then evaluate using the
+    computer:
+        weakestSet ([1,2,3,4],
+                    [(1,4),(1,3),(1,2),(1,1),
+                     (2,3),(2,4),(2,2),(3,4),
+                     (3,3),(4,4)])
+                     
+        poset: 1 <- 2 <- 3 <- 4, so {1} is the weakest
+                     
+        weakestSet ([1,2,3,4],
+                    [(1,4),(1,2),(1,1),(2,4),
+                     (2,2),(3,4),(3,3),(4,4)])
+                     
+        poset: 1 <- 2 <- 4
+                    3 <- 4  
+               so weakest are {1,3}
+        
+        greatestSet ([1,2,3,4],
+                     [(1,2),(3,4),(1,1),(2,2),(3,3),(4,4)])
+                     
+        poset: 1 <- 2
+               3 <- 4      so greatest are {2,4}
+        
+        greatestSet ([1,2,3,4],
+                     [(2,3),(3,4),(2,4),(1,1),(2,2),(3,3),(4,4)]) 
+                     
+        poset: 1; 2 <- 3 <- 4  so {4} is greatest
+                               No, actually {1,4}, see output below
+        
+    (Solution Ref: https://gist.github.com/kanak/878086)
+
+-}     
+ex34a = weakestSet ([1,2,3,4],
+                    [(1,4),(1,3),(1,2),(1,1),
+                     (2,3),(2,4),(2,2),(3,4),
+                     (3,3),(4,4)])
+             
+ex34b = weakestSet ([1,2,3,4],
+                    [(1,4),(1,2),(1,1),(2,4),(2,2),(3,4),(3,3),(4,4)])
+
+ex34c = greatestSet ([1,2,3,4],
+                     [(1,2),(3,4),(1,1),(2,2),(3,3),(4,4)])
+
+ex34d = greatestSet ([1,2,3,4],
+                     [(2,3),(3,4),(2,4),(1,1),(2,2),(3,3),(4,4)])    
+{-
+    Output:
+    
+        Main> ex34a
+        [1]
+        Main> ex34b
+        [1,3]
+        Main> ex34c
+        [2,4]
+        Main> ex34d
+        [1,4]
+    
+        NOTE: in ex34d '1' is not comparable with any other element
+              as a result it is listed in both the greatest and 
+              weakest sets
+              
+        Main>  weakestSet ([1,2,3,4], [(2,3),(3,4),(2,4),
+                                       (1,1),(2,2),(3,3),(4,4)])
+        [1,2]
+
+-}
+{-
+    Exercise 35
+    
+    What are the greatest and weakest elements in a poset diagram
+    that contains the following arcs:
+
+    (a) {(a, b), (a, c)}            -- a weakest, b and c greatest
+    (b) {(a, b), (c, d)}            -- a,c weakest, b,d greatest
+    (c) {(a, b), (a, d), (b, c)}    -- a weakest, c,d greatest
+    
+    poset diagrams from https://gist.github.com/kanak/878086
+    
+    (a) c -> a <- b
+    (b) a <- b; c <- d
+    (c) d -> a <- b <- c
+-}
+{-
+    Exercise 36
+    
+    Work out the following expressions, and evaluate them with the
+    computer:
+
+    isQuasiOrder ([1,2,3,4],[(1,2),(2,3),(3,4)])
+        not reflexive
+        1 <- 2
+             2 <- 3 <- 4
+             
+        missing (1,3) so not transitive therefore False
+        
+    
+    isQuasiOrder ([1,2,3,4],[(1,2)])
+        1 <- 2 transitive, irreflexive therefore True
+
+-}
+ex36a = isQuasiOrder ([1,2,3,4],[(1,2),(2,3),(3,4)])    -- False
+ex36b = isQuasiOrder ([1,2,3,4],[(1,2)])                -- True
+
+{-
+    Exercise 37
+    
+    Evaluate the following expressions, by hand and using the computer:
+
+    isLinearOrder
+    ([1,2,3],[(1,2),(2,3),(1,3),(1,1),(2,2),(3,3)])
+
+        1 < 2 < 3       True
+    
+    isLinearOrder
+    ([1,2,3],[(1,2),(1,3),(1,1),(2,2),(3,3)])
+    
+        1 < 2; 1 < 3    False, missing (2,3)
+
+-}
+ex37a = isLinearOrder ([1,2,3],[(1,2),(2,3),(1,3),(1,1),(2,2),(3,3)])
+ex37b = isLinearOrder ([1,2,3],[(1,2),(1,3),(1,1),(2,2),(3,3)])
+
+{-
+    Output:
+    
+        Main> ex37a
+        True
+        Main> ex37b
+        False
+        Main>     
+
+-}
+{-
+    Exercise 38
+    
+    We have been watching a computer terminal. Is the order in
+    which people come and use the terminal a total order?
+    
+    We have the set of people using the machine; it can only
+    be used by one person at a time, therefore it must, of
+    necessity, be ordered by time.
+
+-}
+{-
+    Exercise 39
+    
+    Is it always possible to count the elements of a linear order?
+    
+    No. The set of real numbers is linear but not countable as
+    the number of elements in any set of reals is infinite.
+    i.e. you cannot count the number of reals between 0 and 1.
+    
+-}
+{-
+    Exercise 40
+    
+    Can a set that is not a well order be countable?
+    
+    Yes. A nominal set can have no linear ordering but we can still
+    process every element in the set. i.e. a handful of mustard seeds
+    have no linear order but we can count them.
+-}
+{-
+    Exercise 41
+    
+    Check to see that the following partial orders are not, in fact, total
+    orders. Use the computer to generate a total order, using a topological
+    sort.
+
+    topsort ([1,2,3,4],[(1,2),(1,3),(2,3),(1,4),(2,4),
+                        (1,1),(2,2),(3,3),(4,4)])
+    
+        poset:   1 <- 2 <- {3,4}
+        topsort: 1 <- 2 <- 3 < 4
+
+    topsort ([1,2,3],[(1,2),(1,3),(1,4),(1,1),(2,2),(3,3)])
+    
+        poset:  1 <- {2,3,4}
+        topo sort: 1 <- 2 <- 3
+-}
+ex41a = topsort ([1,2,3,4],[(1,2),(1,3),(2,3),(1,4),(2,4),
+                            (1,1),(2,2),(3,3),(4,4)])
+
+ex41b = topsort ([1,2,3],[(1,2),(1,3),(1,4),(1,1),(2,2),(3,3)])
+
+{-
+    Output:
+    
+        Main> ex41a
+        [1,2,3,4]
+        Main> ex41b
+        [1,2,3]
+        Main>     
+
+-}
+{-
+    Exercise 42
+    
+    Evaluate the following expressions using the computer:
+
+-}
+ex42a = isEquivalenceRelation ([1,2],[(1,1),(2,2),(1,2),(2,1)])
+ex42b = isEquivalenceRelation ([1,2,3],[(1,1),(2,2)])
+ex42c = isEquivalenceRelation ([1,2],[(1,1),(2,2),(1,2),(2,1)])
+ex42d = isEquivalenceRelation ([1],[])    
+
+{-
+    Output:
+    
+        Main> ex42a
+        True
+        Main> ex42b
+        False
+        Main> ex42c
+        True
+        Main> ex42d
+        False
+        Main>     
+-}
+{-  
+    Exercise 43
+        Does the topological sort require that the graph’s relation is a
+        partial order?
+        
+        A topological sort is the process of taking a partial order
+        and putting it into total order. Guess you could take a
+        total order and apply a topological sort but it would be
+        trivial.
+-}
+{-
+    Exercise 44
+        Can the graph given to a topological sort have cycles?
+        
+        A topological sort puts elements into total order.
+        Elements in total order create a 'chain'
+        If the graph had cycles we'd get a repeated loop, not
+        a chain; the sort would never end (?)
+-}

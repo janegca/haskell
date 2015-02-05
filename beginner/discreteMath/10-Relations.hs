@@ -274,6 +274,7 @@ ex32c = isReflexive digraph3    -- False (missing (3,3))
 -}
 {-
     10.6 Powers of Relation
+    -----------------------
     
     For a relation, R, the nth power is the composition R;R;...;R
     where R appears 'n' times. R^2 = R;R, R^1 = R, R^0 is the identity
@@ -334,6 +335,7 @@ ex32c = isReflexive digraph3    -- False (missing (3,3))
 -}
 {-
     10.7 Closure Properties of Relations
+    ------------------------------------
     
     In computing, DB relations are usually declared in two ways
     
@@ -365,6 +367,7 @@ ex32c = isReflexive digraph3    -- False (missing (3,3))
         absence of certain pairs.
         
     Reflexive Closure  r(R)
+    -----------------------
         Contains all the arcs in the relation along with an arc
         from each node to itself. Denoted by r(R)
         
@@ -376,6 +379,7 @@ ex32c = isReflexive digraph3    -- False (missing (3,3))
         all the nodes x in the set A
         
     Symmetric Closure  s(R)
+    -----------------------
         Contains all the arcs in the relation along with the 
         converse of those arcs. i.e. if there is an arc (a,b)
         there should also be an arc (b,a). Denoted by s(R)
@@ -384,6 +388,7 @@ ex32c = isReflexive digraph3    -- False (missing (3,3))
             R^c = {(b,a) | (a,b) in R}
             
     Transitive Closure  
+    ------------------
         The transitive closure of a relation is the union of
         all the powers of R.
         
@@ -391,6 +396,243 @@ ex32c = isReflexive digraph3    -- False (missing (3,3))
              of R::AxA would be:
              
                 R^1 union R^2 union R^3 union R^4
-                
-                 
+                                 
 -}
+{-
+    10.8 Order Relations
+    --------------------
+        An 'order relation' specifies an ordering that can be used
+        to create a sequence from the elements in the domain.
+        
+        One of the most fundamental properties of an order relation is
+        transitivity. If 'a' precedes 'b' and 'b' precedes 'c' then we
+        want 'a' to precede 'c'.
+        
+        There are many different types of 'ordering'
+        
+    Partial Order
+    -------------
+        Puts some, but not necessarily all, elements into sequence.
+        There can be a series of sequences within a partial order,
+        without any ordering between the sequences.
+        
+        Def: A binary relation R over a set A is in 'partial order'
+             if it is reflexive, antisymmetric, and transitive.
+        
+        Example:
+            A DB can be sorted on a property that is not held
+            by all records; leaving it in partial order.
+            
+            A DB sorted on names, can be more than one record for
+            common names; that is 'partial order' 
+            
+            A data structure of ordered pairs sorted solely on the
+            first element of each pair
+            
+            [Note: examples are those of a sort based on one db
+                   'column' or field or key vs a multi-key sort.]
+            
+        POSET Diagram
+        -------------
+            A digraph of a partially ordered set (poset) does not
+            include the reflexive or transitive arcs as we know
+            they are there. A directed path between two nodes shows
+            they are comparable.
+            
+                    a     e         Poset Diagram
+                    |  f  |
+                    | / \ |         reflexive and transitive arcs
+                    b     d         excluded
+                     \   /          shows the ordering of elements
+                       c            and which are comparable
+            
+            If 'x' precedes 'y' in a directed path, 'x' is said to be
+            'weaker' than y.
+            
+            If there is no directed path from 'x' to 'y' or vice-versa
+            then 'x' and 'y' are incomparable.
+            
+            There can be more than one 'weakest' element and more than
+            one 'greatest' element in a poset.  The set of 'least'
+            elements are those that are incomparable to or weaker than
+            any other element while the set of 'greatest' elements
+            are those that are incomparable to or greater than any
+            other element.
+            
+            In the above diagram:
+                weakest element         c
+                greatest elements       a,f,e
+                
+    Quasi-Order
+    -----------
+        Similar to partial order EXCEPT it is irreflexive.
+        
+        Def: A binary relation R over set A is a quasi-order if it
+             is irreflexive and transitive.
+             
+         Example: 
+            The relation (<) on numbers is quasi-order but
+            (<=) is not (= adds reflexive elements)
+            
+        Note that symmetry and antisymmetry are 'uninteresting' for
+        quasi-order i.e. you can ignore those properties
+        
+        (Ref: https://gist.github.com/kanak/878086)
+        THEOREM: A Quasi Order is not symmetric
+        Proof: If it is symmetric, we have both (a,b) and (b,a)
+               But: by transitivity, we'd require (a,a) which makes it 
+               reflexive.
+
+        THEOREM: A quasi order is antisymmetric
+        Proof: Since irreflexive, we don't have xRx
+               By previous theorem, we don't simultaneously have xRy and 
+               yRx with x&y distinct So vacuously true.  
+
+    Linear (Total) Order
+    --------------------
+        Linear order is like partial order EXCEPT all elements must
+        be related to each other.
+        
+        Def: A linear order is a partial order defined over a set A
+             in which for each element 'a' and 'b' in A, either
+             'a' is weaker than 'b' or 'b' is weaker than 'a'
+        
+        Example:
+            (<=) and (>=) relations on real numbers are linear orders
+            as we are guaranteed that either x <= y or y >= x will be
+            true and if x == y they are the same.
+        
+        The elements of linear order can be said to form a 'chain';
+        we omit the arcs for transitivity and reflexivity.
+        
+    Well Order
+    ----------
+        A 'well order' is a total (linear) order that has a 'least'
+        element; furthermore, every subset of a well order must have
+        a least element.
+        
+        Def: Given a set S and a binary relation R over S, R is a
+             well order if R is a linear order and every non-empty
+             subset of S has a least element.
+        
+        The existence of a 'least' element is significant because
+        it provides a base case for inductive proofs and recursive
+        functions.
+        
+        Any total order with a finite number of elements must have
+        a least element; some total orders with an infinite number
+        of elements do have a least element, others do not.
+
+        Examples:
+            The relation (<=) on the set N = {0,1,2,...} is a total
+            order and has a least element, 0, so it is also a well 
+            order.
+            
+            The relation (<=) on the set of integers, 
+                Z = {..-2,-1,0,1,2,...}
+            is a total order but NOT a well order as there is no
+            least element.
+            
+        Well orders are important as they support induction and are
+        countable.
+        
+        Informally, a 'countable set' is one in which an arbitrary
+        element can eventually be processed by a computer i.e it
+        is possible to process EVERY element in the set.
+        
+    Topological Sorting
+    -------------------
+        The process of taking a partial order and putting its elements
+        into a total order.
+        
+        There is a simple and general algorithm for topological sorting. 
+        Choose x, one of the elements that is greatest in the set A, and 
+        make it the first in the sequence. Now do the same for the set 
+        A - {x}, and continue until A is empty.
+        
+        Example
+            Compilers impose a total order on programs by creating
+            a dependency graph with the first name the total order
+            is a procedure that doesn't call any other procedure
+            while the last is the top-level procedure that starts
+            the application.
+            
+            Suppose the following represents such a call graph:
+            
+            {(’A’,’B’),(’B’,’B’),(’B’,’C’),(’B’,’D’),(’C’,’D’)}
+            
+            What would be the topological sort?
+            
+            First, the function that calls no other: D
+            Next, the functions that call D: B,C
+                  C calls no other functions
+                  the functions that call B: B, A
+
+            So D, C, B, A
+            
+-}
+{-
+    10.9 Equivalence Relations
+    
+        Some relations can be used to break a set into several 
+        categories or 'partitions', where every element of the set
+        belongs to one category. Such a relation is called an
+        'equivalence relation'.  
+        
+        An equivalent relation is closed over the transitive,
+        symmetric and reflexive properties.
+        
+        Def: The relation R over the set A is an equivalence
+             relation if it is reflexive, transitive, and symmetric.
+        
+        Example:
+            Organizing a list of telephone numbers into groups
+            determined by the first letter of each name i.e
+            we create a section for each letter of the alphabet.
+            
+        The equivalence relation can be thought of as the union of
+        all non-empty subsets (partitions) of A where each 
+        subset is 'disjoint' from the others. i.e. S1 intersect
+        S2 = empty set.
+        
+        For example, in the phone list example no one's name can
+        have a first letter that is both 'a' and one of the other
+        25 letters therefore the subsets (partitions) are disjoint.
+        
+        Congruence Relation
+        -------------------
+        
+        We can define a congruence over the modulus function:
+        
+            Let 'k' be a positive integer and 'a' and 'b' integers.
+            If there is an integer 'n' such that
+                (a - b) = n * k
+            
+            Then 'a' is congruent to b (modulo k)
+            
+        i.e. if a - b is divisible by n, or 
+             if a/n == b/n, then
+             a and b are equivalent (mod n)
+             
+        Which allows us to define a 'congruence relation' C_k
+        for all natural 'k' such that k > 0 as follows:
+            a C_k b iff a is equivalent b (mod k)
+            
+        The congruence relation is an equivalence relation.
+        
+        Example:
+            Consider partitioning integers by C_3
+            This gives rise to 3 sets:
+            
+            1. all integers of the from n x 3 (multiples of 3)
+                {0,3,6,9,12,15,...}
+                
+                all n where (n mod 3) == 0
+                
+            2. integers of the form n * 3 + 1
+                {1,4,7,10,13,16,...}
+            
+            3. integers of the form n * 3 + 2
+                {2,5,8,11,14,...}
+-}
+            
