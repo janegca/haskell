@@ -615,6 +615,7 @@ ex31d2 = symmetricClosure( transitiveClosure(
     Main> ex31d1
     ([1,2,3],[(2,3),(2,2),(1,1),(3,3),(3,2),(2,1),(1,3),(1,2),(3,1)])
     Main> 
+    
     Main> ex31a2
     ("abc",[('a','b'),('a','c'),('b','a'),('c','a')])
     Main> ex31b2
