@@ -2,12 +2,31 @@ module SetOrd (Set(..),emptySet,isEmpty,inSet,subSet,insertSet,
                deleteSet,powerSet,takeSet,(!!!),list2set,unionSet) 
 
 where
+{-
+    Chapter 5 - Relations 
+        This is a supporting file for Chapter 5
+    
+    References:
+        "The Haskell Road to Logic, Maths and Programming, 2nd Edition"
+        by Kees Doets, Jan van Eijck, College Publications, UK, 2012
+        
+    Modifications:
+        -- to match SetEq.hs 
+            removed Eq from 'deriving' statement for Set
+            added Eq instance for Set
+        -- unionSet was returning duplicated values
+             added 'sort' to insertList function
+-}
 
 import Data.List (sort) 
 
 {-- Sets implemented as ordered lists without duplicates --} 
 
-newtype Set a = Set [a] deriving (Eq,Ord)
+newtype Set a = Set [a] deriving (Ord)
+
+-- missing from original file
+instance (Ord a, Eq a) => Eq (Set a) where 
+  set1 == set2 = subSet set1 set2 && subSet set2 set1
 
 instance (Show a) => Show (Set a) where
     showsPrec _ (Set s) str = showSet s str
@@ -36,7 +55,7 @@ insertSet x (Set s) = Set (insertList x s)
 
 insertList x [] = [x]
 insertList x ys@(y:ys') = case compare x y of 
-                                 GT -> y : insertList x ys' 
+                                 GT -> sort(y : insertList x ys')
                                  EQ -> ys 
                                  _  -> x : ys 
 
@@ -73,6 +92,5 @@ infixl 9 !!!
 
 unionSet :: (Ord a) => Set a -> Set a -> Set a 
 unionSet (Set [])     set2  =  set2
-unionSet (Set (x:xs)) set2  = 
-   insertSet x (unionSet (Set xs) set2)
+unionSet (Set (x:xs)) set2  =  insertSet x (unionSet (Set xs) set2)
 
