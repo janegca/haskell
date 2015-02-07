@@ -223,6 +223,31 @@ repeatR r n | n < 1     = error "argument < 1"
             | n == 1    = r
             | otherwise = r @@ (repeatR r (n-1))
             
+{-
+    Following written to demonstrate use of the above functions
+-}               
+
+dset = Set [1,2,3,4]
+drel = Set [(0,2),(0,3),(1,0),(1,3),(2,0),(2,3)]
+
+dDomR   = domR drel              -- {0,1,2}
+dRanR   = ranR drel              -- {0,2,3}
+dIdR    = idR  dset              -- {(1,1),(2,2),(3,3),(4,4)}
+dTotalR = totalR dset            
+    -- {(1,1),(1,2),(1,3),(1,4),(2,1),(2,2),(2,3),(2,4),(3,1),(3,2),
+    --  (3,3),(3,4),(4,1),(4,2),(4,3),(4,4)}
+    
+dInvR  = invR drel              -- {(0,1),(0,2),(2,0),(3,0),(3,1),(3,2)}
+dInR   = inR r (0,3)            -- True
+dComplR = complR dset dIdR
+    -- {(1,2),(1,3),(1,4),(2,1),(2,3),(2,4),(3,1),(3,2),(3,4),(4,1),
+    --  (4,2),(4,3)}
+    
+dReflR   = reflR dset dTotalR     -- True
+dIrreflR = irreflR dset dTotalR   -- False
+dSymR    = symR dTotalR           -- True
+dTransR  = transR dTotalR         -- True
+            
 -- Example of calculating powers of R
 --  Note that R^3 is the same as the original relation, and,
 --       that R^4 is the same as R^2
@@ -238,6 +263,7 @@ ex51a = r == r3 && r2 == r4
 s = Set [(0,0),(0,2),(0,3),(1,0),(1,2),(1,3),(2,0),(2,2),(2,3)]
 ex51b = (unionSet r (s @@ r)) == s
                
+              
 -- Exercise 52,53,54 - provided solutions
 --               
 -- Returns the intersection of two sets      
@@ -265,11 +291,31 @@ tclosR :: Ord a => Rel a -> Rel a
 tclosR r | transR r  = r
          | otherwise = tclosR (unionSet r (r @@ r))
 
+{-
+    Following demonstrate the use of above functions
+-}         
+ds1  = Set [0,1,2]
+ds2  = Set [1,2,3]
+ds1t = totalR ds1
+ds2t = totalR ds2
+
+dIntersect = intersectSet ds1 ds2           -- {1,2}
+dRestrictR = restrictR ds1 ds2t             -- {(1,1),(1,2),(2,1),(2,2)}
+dRclosR    = rclosR ds1t        
+        -- {(0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2)}
+
+dSclosR = sclosR ds2t  
+        -- {(1,1),(1,2),(1,3),(2,1),(2,2),(2,3),(3,1),(3,2),(3,3)}
+
+dTclosR = ds1t       
+        -- {(0,0),(0,1),(0,2),(1,0),(1,1),(1,2),(2,0),(2,1),(2,2)}
+
+         
 -- Exercise 55 - provided solutions
---      The 'inDegree' appears to be a count of number of times
---          'a' then occurs in the y position of the (x,y) pairs
+--      The 'inDegree' is a count of the number of times
+--          'a' occurs in the y position of the (x,y) pairs
 --         
---      The 'outDegree' appears to be a count of the number of
+--      The 'outDegree' is a count of the number of
 --          times 'a' occurs in the x position of the (x,y) pairs
 --
 -- Returns the number of elements of A that are R-related to a
@@ -278,58 +324,97 @@ inDegree (Set r) = \ x -> length [ y | (_,y) <- r, y == x ]
 
 -- Returns the number of elements of A that a is R-related to
 outDegree :: (Eq a) => Rel a -> a -> Int
-outDegree (Set r) = \ x -> length [ y | (y,_) <- r, y == x ]    
+outDegree (Set r) = \ x -> length [ y | (y,_) <- r, y == x ]  
+
+-- demo of usage
+--  Note: '1' never appears in the first position of an ordered pair
+--        '3' never appears in the second position of an ordered pair
+setA = Set [0..3]
+
+dInDeg  = map (inDegree  r) [0..3]      -- [2,0,1,3]
+dOutDeg = map (outDegree r) [0..3]      -- [2,2,2,0]
 
 -- Exercise 56 - provided solution
+--  NOTE: added 'nub' as list comprehension was returning 
+--        duplicated 'inDegree' values; a true Set would not contain
+--        duplicated values
+--
 -- 'a' of A is a 'source' of R iff (indegree r a) == 0 and
 -- (outDegree r a) >= 1
 sources :: (Eq a) => Rel a -> Set a
-sources (Set r) = Set [ x | x <- union (map fst r) (map snd r),
-                            inDegree (Set r)  x == 0,
-                            outDegree (Set r) x >= 1 ]
+sources (Set r) = Set $ nub[ x | x <- union (map fst r) (map snd r),
+                                 inDegree  (Set r) x == 0,
+                                 outDegree (Set r) x >= 1 ]
 
 -- 'a' of A is a 'sink of R' iff (inDegree r a) >= 1 and
 -- (outDegree r a) == 0                            
 sinks :: (Eq a) => Rel a -> Set a
-sinks (Set r) = Set [ x | x <- union (map fst r) (map snd r),
-                          outDegree (Set r) x == 0,
-                          inDegree (Set r)  x >= 1 ]
-                          
+sinks (Set r) = Set $ nub [ x | x <- union (map fst r) (map snd r),
+                                outDegree (Set r)  x == 0,
+                                inDegree  (Set r)  x >= 1 ]
+                                                    
+-- demo of usage
+--      r = {(0,2),(0,3),(1,0),(1,3),(2,0),(2,3)}
+-- it is based on Set [0,1,2,3]
+-- we have inDegree values of [2,0,1,3] and outDegree values of
+-- [2,2,2,0] so the only 'source' can be 1 (0 in degrees, 2 out degrees)
+-- and the only 'sink' can be 3 (0 out degrees, 3 in degrees)
+
+dSources  = sources r       -- {1}
+dSinks    = sinks   r       -- {3}
+                                              
 {-
     5.4 Relations as Functions
     
-    A 'characteristic' function is a function of type A -> {0,1}
-    they 'characterize' subsets of a set A.
+    The above treated a 'relation' as a set of ordered pairs
+    which have been defined by some selection condition over
+    a set and itself (R::AxA) or one set and another (R::AxB).
     
-        f:A -> {0,1} 
-        
-    characterizes the set
+    In example 5.9 the authors say:
     
-        B = {a in A | f(a) = 1} is a subset of A
+    "In practise, you define a relation by means of a condition
+     on the elements of ordered pairs. This is completely
+     analogous to the way you define a set by giving a 
+     condition its elements should fulfil."
+     
+    For example, one 'relation' might be the set of ordered
+    pairs that satisfy the 'identity relation'; another
+    relation might satisfy the 'symmetry property', or, it
+    may be the set of all the divisor pairs of a number, n.
+    
+    That relation would be written as:
+        {(a,b) | a,b in N, a*b = n, a <= b}
         
-    The function 'divides' (shown below) is typical (characteristic)
-    of a Haskell function; it takes two arguments and returns a
-    result:
+    And could be implemented in Haskell as the function
+    'divisors'. So the Set {(1,6),(2,3)} would be a relation
+    that satisfies the condition that each pair consists of
+    elements that evenly divide 6.
+
+    In this section, a 'relation' is treated as the 'condition'
+    being applied. i.e. it is defined as a function which
+    returns True or False depending on whether the two values
+    it takes comply with the defined condition.
+    
+        type Rel' a = a -> a -> Bool
+        
+    So a Rel' can be used to test whether or not a given 
+    pair satisfies a condition. It's type signature matches     
+    that of a typical Haskell function:
     
         f :: a -> b -> c
         
-    Haskell provides a function, 'flip' that will reverse the order
-    of the arguments. For example, 
+    Essentially, any Haskell predicate function can be a Rel'
+    type.
     
-            flip (<=) 3 4   -> (<=) 4 3  -> False
-            flip (<=) 4 3   -> (<=) 3 4  -> True
+    If we want to use an existing predicate function on an
+    ordered pair we can use the Prelude 'uncurry' function
+    to turn the type a -> b -> c into the type (a,b) ->c.
+    
+    And if we want to use an existing function that takes an
+    ordered pair into one that takes two arguments, we can
+    use the built-in 'curry' function which will take the
+    type (a,b) -> c and turn it into a -> b -> c.
         
-    A characteristic function takes two arguments and returns a result; 
-    however, sometimes we want to pass in arguments as a pair
-        f:(a,a) -> Bool or (a,b) -> c.
-        
-    Haskell provides a function, 'uncurry' that allows us to 
-    transform a function that of type a -> b -> c into a type
-    (a,b) -> c; while 'curry' allows us to take a function of
-    type (a,b) -> c into a function of type a -> b -> c
-    
-    Below are examples of curried and uncurried functions
-    
 -}                          
 divides :: Integer -> Integer -> Bool
 divides d n | d == 0    =  error "divides: zero divisor"
@@ -340,15 +425,33 @@ eq = uncurry (==)
 
 lessEq :: Ord a => (a,a) -> Bool
 lessEq = uncurry (<=)
-       
--- it's a simple matter to define the inverse of a function
--- that takes a pair for an argument [to 'flip' the pair]
+
+
+{-
+    Haskell also provides a function, 'flip' that will reverse the order
+    of two arguments. For example, 
+    
+            flip (<=) 3 4   -> (<=) 4 3  -> False
+            flip (<=) 4 3   -> (<=) 3 4  -> True
+            
+    We can easily define a function that will do the same for
+    a function that takes an ordered pair.
+
+-}       
 inverse :: ((a,b) -> c) -> ((b,a) -> c)
 inverse f (x,y) = f (y,x)
 
---
---  The representation of relations as characteristic functions
---      
+{-
+    The following are functions of, taking, or returning
+    Rel' type functions
+    
+    Note: Really don't get the point of these functions, there
+          is only one example (so far) of their use, in the 
+          solution to an exercise.
+          
+          Maybe things will get clearer as the chapter proceeds.
+      
+-}      
 
 -- a type alias defining a relation as a function
 type Rel' a = a -> a -> Bool
@@ -367,7 +470,7 @@ idR' xs = \ x y -> x == y && elem x xs
 invR' :: Rel' a -> Rel' a
 invR' = flip
 
--- check wither a pair is in a relation
+-- check whether a pair is in a relation
 inR' :: Rel' a -> (a,a) -> Bool
 inR' = uncurry
 
@@ -408,6 +511,81 @@ repeatR' xs r n | n < 1 = error "argument < 1"
                 | n == 1 = r
                 | otherwise = compR' xs r (repeatR' xs r (n-1))
                 
-                
+--
+-- Exercise 5.57 is an example of how the Rel' type is used
+--      Essentially, create a relation as a function and pass
+--      it as an argument
+--
+--      Below is the 'successor' relation implemented as a function, 
+--      It takes 2 Int values for arguments and returns True if
+--      the second is 1 greater than the first.
+--
+--      REMEMBER the type Rel' is a -> a -> Bool and it is
+--      also the type of 'successor' and 'rel' as BOTH are
+--      functions
+--
+--      
+successor :: Rel' Int
+successor = \ n m -> n+1 == m
+
+rel :: Rel' Int
+rel = unionR' successor (repeatR' [0..1000] successor 2)  
+
+ex57a = rel 1 3
+ex57b = rel 1 4        
                     
-         
+{-
+    5.5 Equivalence Relations
+    
+    A relation R on A is an 'equivalence relation' if R is
+    transitive, reflexive on A, and symmetric. For example,
+    on the set of human beings, the relation of having the
+    same age is an equivalence relation. 
+    
+-}
+  
+-- equivalence test
+equivalenceR :: Ord a => Set a -> Rel a -> Bool
+equivalenceR set r = reflR set r && symR r && transR r
+
+dEquivRa = equivalenceR ds1 ds1t            -- True
+dEquivRb = equivalenceR ds1 (idR ds1)       -- True
+
+{-
+    5.6 Equivalence Classes and Partitions
+    
+    For each a in A, an equivalence class containing 'a' is the set 
+    containing all elements that are equivalent to 'a'.
+    
+    For example, in a list of names, we could grouping all the
+    names based on their first letter and each group would be
+    an equivalence class based on the first letter and the 'union'
+    of all the equivalence classes would be A.
+    
+    Equivalence relations let us 'partition' the set A into
+    equivalence classes. On important equivalence relations defined
+    on Integers is 'congruence modulo n'.
+    
+    Let n be an Integer, then we can define a relation on Z
+    a equiv b (mod n) iff n evenly divides (a-b) 
+    
+-}
+modulo :: Integer -> Integer -> Integer -> Bool
+modulo n = \ x y -> divides n (x-y)
+
+-- equivalence classes in Z (mod 4); classes start repeating at
+-- (modulo 4 4); these subsets of the Set [-15..15] are 'partitions'
+setB = [-15..15]
+ex80a = filter (modulo 4 0) setB   -- [-12,-8,-4,0,4,8,12]
+ex80b = filter (modulo 4 1) setB   -- [-15,-11,-7,-3,1,5,9,13]
+ex80c = filter (modulo 4 2) setB   -- [-14,-10,-6,-2,2,6,10,14]
+ex80d = filter (modulo 4 3) setB   -- [-13,-9,-5,-1,3,7,11,15]
+
+-- so, how do we define this as a 'relation' on setB??
+
+-- TODO: need to find better source material on equivalence relations
+
+
+ 
+
+
