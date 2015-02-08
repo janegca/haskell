@@ -581,11 +581,5 @@ ex80b = filter (modulo 4 1) setB   -- [-15,-11,-7,-3,1,5,9,13]
 ex80c = filter (modulo 4 2) setB   -- [-14,-10,-6,-2,2,6,10,14]
 ex80d = filter (modulo 4 3) setB   -- [-13,-9,-5,-1,3,7,11,15]
 
--- so, how do we define this as a 'relation' on setB??
-
--- TODO: need to find better source material on equivalence relations
-
-
- 
 
 
