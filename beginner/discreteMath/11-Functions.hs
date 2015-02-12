@@ -2,6 +2,7 @@
 --
 -- Reference: 'Discrete Mathematics Using a Computer' by John O'Donnell,
 --             Cordelia Hall, and Rex Page
+import Stdm
 
 {-
     Functions
@@ -141,9 +142,9 @@
             
 -}
 -- add n to itself k times
-add :: Int -> Int -> Int
-add n 0 = 0
-add n k = n + add n (k - 1)
+add' :: Int -> Int -> Int
+add' n 0 = 0
+add' n k = n + add' n (k - 1)
 
 -- this function is recursive BUT not inductively defined
 -- it calls itself recursively on a 'larger' (not smaller)
@@ -507,8 +508,10 @@ exMultBy = multby 3 2       -- 6
     If the domain of f = A then 'f' is a 'total function'
     
     If the domain of f is a subset of A then 'f' is a 'partial function'
+    
     If 'f' is a partial function and 'x' is in the domain of 'f', then
     'f x' is defined. 
+    
     If 'f y' where 'y in A' but 'y not in domain f' then 'y' is 
     undefined. Computer science uses a special symbol (an inverted T)
     to represent an undefined value; the symbol is called 'bottom'.
@@ -631,4 +634,337 @@ fe x =
     Stdm.lhs contains a function, 'functionComposition' which
     takes two function graphs and returns it's composition as
     another function graph.
+-}
+{-
+    11.6 Properties of Functions
+    
+    We've used 4 sets to characterize functions:
+        the argument type
+        the domain
+        the result type
+        the image
+        
+    There are several useful properties of functions that concern
+    these 4 sets.
+    
+    Surjective Property
+    -------------------
+    A surjective function has an image (range) the same as its 
+    result type.
+    
+    Def:  f :: A -> B is surjective if
+            (forall b in B).((exists a in A).f a = b)
+            
+    i.e. for a function to be 'surjective', the function image (result set) 
+         must include every member of the result type         
+            
+    Example
+        The image (result set) of a function with a Bool result type
+        is surjective if it includes both True and False results.
+        
+        The increment function is surjective as the image set includes
+        all integers.
+        
+        The even function is NOT surjective as its result type is
+        Int but its image (result set) includes only even integers.
+        
+    If the result type of a function is larger than its domain it cannot
+    be surjective. For example, let A = {2,3} and B = {4,5,6}, if
+    f :: A -> B then it is not surjective as the image can only
+    contain two ordered pairs since the 'x' value in every ordered
+    pair must be unique; there cannot be a 'y' value for every element
+    of B.
+    
+    Haskell functions that are surjective (result type are no larger
+    than their domain types)
+        not :: Bool -> Bool
+        member v :: [Int] -> Bool
+        increment :: Int -> Int
+        id :: a -> a
+    
+    while the following are NOT surjective
+        length :: [a] -> Int     -- returns only 0 or a pos integer
+        abs :: Int -> Int        -- only returns pos integers, no negs
+            
+    Injective Property
+    ------------------
+    A function is 'injective' if each element of the image is the
+    result of applying the function to exactly one element of the domain
+    i.e. each 'y' element in a set of ordered pairs must be unique
+    
+    Def:  f :: A -> B is injective if
+            (forall a, a' in A). a /= a' -> f a /= f a'
+            
+    [Note: result must include an 'x' value for EVERY 'a' value]
+            
+    Examples
+        Let A = {1,2}, B = {3,4,5} and define f :: A -> B as
+        {(1,3),(2,5)} then 'f' is injective as the 'x' element
+        in each ordered pair has a unique 'y' element.
+        
+        Let A = {1,2,3}, B = {4,5} and define g :: A -> B as
+        {(1,4),(2,5),(3,5)} then 'g' is NOT injective as '5'
+        appears as the 'y' value in two pairs.
+        
+        Haskell functions that are injective:
+            (/\) True :: Bool -> Bool
+            increment :: Int -> Int
+            id :: a -> a
+            
+        Haskell function that are NOT injective:
+            length :: [a] -> Int
+            take n :: [a] -> [a]      
+
+            as in both cases, different inputs can be mapped
+            to the same results i.e. multiple lists can have the
+            same length; 'take' will map both [a1, a2, . . . , an, x] 
+            and [a1, a2, . . . , an, y] to the same result
+            [a1, a2, . . . , an], even if x /= y.
+            
+    Example 126
+
+        Let A = {1, 2, 3} and B = {4, 5, 6}. Define three functions as
+        follows:
+            f1, f2, f3 :: A → B
+            f1 = {(1, 4), (2, 6), (3, 5)}
+            f2 = {(1, 4), (2, 4), (3, 5)}
+            f3 = {(1, 4), (3, 5)}    
+            
+        Represent them as graphs and use the software tools to explore
+        their properties.
+        
+        [Note: 'undefined' is part of every image??]
+-}
+fun_domain   = [1,2,3]
+fun_codomain = [4,5,6]
+
+fun1 = [(1, Value 4), (2, Value 6), (3, Value 5)]
+fun2 = [(1, Value 4), (2, Value 4), (3, Value 5)]
+fun3 = [(1, Value 4), (2, Undefined), (3, Value 5)]
+
+ex126a = isInjective fun_domain fun_codomain fun1       -- True
+ex126b = isInjective fun_domain fun_codomain fun2       -- False
+ex126c = isInjective fun_domain fun_codomain fun3       -- True
+
+ex126d =isInjective fun_domain fun_codomain 
+                   (functionalComposition fun1 fun2)    -- False
+ex126e = isInjective fun_domain fun_codomain 
+                    (functionalComposition fun1 fun3)   -- False
+ex126f = isInjective fun_domain fun_codomain 
+                    (functionalComposition fun2 fun3)   -- False
+
+{-
+    The PigeonHole Principle
+    ------------------------
+    If A and B are finite sets and |A| > |B| there is no
+    injection from A to B as every 'f a' must have a unique
+    'b' result; that is not possible if there is not at least
+    one 'b' for every 'a'. i.e. if A is the pigeons and B
+    is the pigeonholes, if there are more pigeons than holes
+    some pigeons will fly free.
+    
+    Theorem: Let A and B be finite sets such that |A| > |B|
+             and |A| > 1. Let f :: A -> B, then
+             
+             (exists a, a' in A).(a /= a') /\ (f a = f a')
+             
+-}                    
+{-
+    11.7 Bijective Functions
+    
+        A function is 'bijective' if it is both surjective and
+        injective i.e. A and B have a one to one correspondence.
+                    |domain f| = |image f|
+                    
+        For every 'a' in the set A, there is a unique 'b' from
+        the set B.
+        
+        Permutations
+        ------------
+            A 'permutation' is a bijective function f::A->A
+            ie. it must have the same domain and image
+            
+            A permutation can only shuffle its input, nothing
+            new can appear in its results.
+            
+        Example
+            If A = {1,2,3} and f:: A -> A is defined as
+            {(1,2),(2,3),(3,1)} then 'f' is a permutation.
+            
+            Functions that reorder lists are permutation functions
+            i.e. sort, reverse
+            
+            If 'f' and 'g' are permutations functions then the
+            composition (f . g) is also a permutation function.
+            
+        Function Inverse
+        ----------------
+        If f:: A -> B then the inverse of 'f' is f^(-1):: B -> A
+        
+               {(y, x) | (exists x, y). (x, y) in f}
+               
+            ie for every (y,x) in f^(-1) there exists an (x,y) in f
+            
+        Example
+            Let A = {1,2,3} and B = {4,5,6} and f::A->B is defined
+            as {(1,4),(2,5),(3,6)} then the graph of its inverse
+            is  {(4,1),(5,2),(6,3)} and the type of its inverse is
+            f':: B -> A
+            
+            The Haskell decrement function is the inverse of the
+            Haskell increment function.
+-}
+{-
+    11.8 Cardinality of Sets
+    
+    The size of a set is called its 'cardinality'.
+    
+    Def: A set S is finite if and only if there is a natural number n such
+         that there is a bijection mapping the natural numbers 
+         {0, 1,... , n - 1} to S.  The cardinality of S is n, and it is 
+         written as |S|.
+         
+        i.e. if S is finite, it can be counted, and the cardinality
+             is the total count of the number of elements in the set.
+             
+    Def:
+        A set 'A' is infinite if there exists and injective function
+        f::A->B such that B is a proper subset of A.
+        
+    Using the properties of a function over a finite set, we can say:
+        
+            if f is a surjective function |A| >= |B|
+            if f is an injective function |A| <= |B|
+            if f is a bijective function  |A| == |B|
+            
+    Def: Two sets have the same size (cardinality) if there is a
+         bijection f::A -> B
+         
+    We can check the cardinality of infinite sets by relating them
+    through a bijection function
+    
+    Example
+        We can place set of integers, I, into a one to one 
+        correspondence with the set of Natural numbers, N,
+        
+            N = 0  1 2  3 4  5 6 ...
+            I = 0 -1 1 -2 2 -3 3 ...
+            
+        using the function f:: I -> N defined as
+        
+            f x | x >= 0    =  2 * x
+                | otherwise = -2 * x - 1
+                
+        so the size of the set of Integers is the same as the size
+        of the set of Natural Numbers and as the set of even
+        numbers!
+        
+        [Wow! that's kind of mind boggling; tendency to think of
+         Integers as every Natural number paired with its own
+         negative which makes you think there'd be twice as many
+         Integers as Natural numbers. 
+         
+         What does this say, then, about negative numbers? Can
+         they be 'real' in the sense that there is any physical
+         representation of a negative number? Or is 'neg' simply
+         a useful property/classification that can be applied
+         to a Natural number? A property created solely to 
+         allow us to count numbers? If a have a '1' and then I
+         have a 'not 1' what is the physical representation  
+         of 'not 1'?  1 plus 'not-one' is zero ... is 'zero' really
+         infinity? zero is not any other number, natural, integer,
+         real, irrational, etc. It is the infinity of non-numbers
+         of every number combined with it's 'not-self'; all number
+         lines disappear into the rabbit hole of zero. 
+         
+         And what about even numbers?? Again there are as many
+         as there are natural numbers; not 'half as many' so
+         evenness is, again, just a property of natural numbers
+         and not a 'real' thing in and of itself? Does this
+         hold true for any other property; any other way we 
+         can think of to classify numbers ... can we always equate them
+         to natural numbers using a bijection??? And can we equate
+         real, rational, irrational numbers in the same way?]
+    
+    Def: A set 'S' is countable if an only if there is a bijection
+         f:: N -> S.
+         
+    A set is 'countable' iff it has the same cardinality as the
+    set of natural numbers. i.e. a set is countable if it can
+    be enumerated and this holds for infinite as well as finite sets.
+
+    Rational Numbers are Countable
+    ------------------------------
+    A rational number is a fraction in the form x/y where x and y
+    are integers; 'x' is the numerator, 'y' the denominator. 
+    
+    If we want to count all ratios we need to put them into a
+    one-to-one correspondence with N. We can do this by creating
+    a series of columns, each of which has an index, n, indicating
+    its place in the series.
+    
+        (1, 1)
+        (1, 2) (2, 1)
+        (1, 3) (2, 2) (3, 1)
+        (1, 4) (2, 3) (3, 2) (4, 1)
+        (1, 5) (2, 4) (3, 3) (4, 2) (5, 1)
+           .      .      .      .      .
+           .      .      .      .      .
+           .      .      .      .      .
+           
+    A column gives all possible fractions with 'n' as the numerator
+    Every line in the sequence is finite and can be printed; every
+    ratio will eventually appear, therefore, the set Q of rational
+    numbers can be placed in a one-to-one correspondence with
+    the Natural numbers and is countable.
+    
+    Real Numbers are Uncountable
+    ----------------------------
+    If A is a subset of B then we cannot say B is larger than A
+    as they might be equal. Even if we know B is a proper subset
+    of A we can still not say that A is greater than B as they
+    might both be infinite.
+    
+    Consider a real number to be a string of digits. Consider the
+    real numbers 'x' such that 0 <= x <= 1 which can be written,
+    without limit, in the form: .d0d1d2d3...
+    
+    Now suppose there is some way we can put the real digits into
+    a correspondence with natural numbers and we can make a table
+    where the ith row contains the ith real number x_i and it
+    contains the list of digits comprising x_i and these digits
+    can be named d_i,0 d_i,1 d_i,2, ..., d_i,j where d_i,j means
+    the jth digit in the decimal representation of ith real number
+    x_i. We'd get a table somewhat like the following:
+    
+            .d00 d01 d02 d03 . . .
+            .d10 d11 d12 d13 . . .
+            .d20 d21 d22 d23 . . .
+            ...  ... ... ... . . . 
+
+    We can show this table is incomplete by constructing a new
+    real number, y, which is definitely not in the list. This
+    number will have the decimal representation 
+    .dy0dy1dy2.... We can ensure that y is different from x0
+    by defining the function:
+    
+            Different:: Digit -> Digit
+            different x | x /= 0    = 0
+                        | otherwise = 1
+                        
+    Note that it doesn't matter how different is defined as 
+    long as it returns a value different than its argument.
+    
+    To ensure that y is different than x for every i in N
+    define 
+            dyi = different xii
+            
+    We have now defined a new number that is 'real' since
+    it is defined by a sequence of numbers and it is different
+    from x_i for any i; furthermore, our construction will
+    work for any enumeration x_i, therefore, it is impossible
+    to set up a correspondence between a set of R of reals
+    and a set N of natural numbers and Real numbers are therefore
+    uncountable.
+      
 -}
