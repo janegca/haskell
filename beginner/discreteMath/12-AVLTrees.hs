@@ -85,15 +85,38 @@ data SearchTree d = Nub
     deriving Show
 
 -- example trees    
-st1 = Nub    
+st1 = Nub    -- height: 0
+
+{-
+    st2                     5120  
+    height: 2               /  \
+                          1143 9605
+                          /  \  / \
+                          N  N  N  N
+-}
 st2 = Cel 5120 "PDA Cam"  (Cel 1143 "Ink Jet"    Nub Nub)
                           (Cel 9605 "Palm Pilot" Nub Nub)
                           
+{-
+    st3                         5120
+    height: 3                   /  \
+                             1143  9605
+                             /  \  /   \
+                            N   N 9600  N
+                                   / \
+                                   N  N
+-}                          
 st3 = Cel 5120 "PDA Cam"  (Cel 1143 "Ink Jet"    Nub Nub)
                           (Cel 9605 "Palm Pilot" 
                              (Cel 9600 "Laptop" Nub Nub)
                              Nub)
--- unordered tree
+{- st 4 unordered tree
+                                    5120
+                                    /  \
+                                  9603 1143
+                                  /  \  / \
+                                  N  N  N  N
+-}
 st4 = Cel 5120 "PDA Cam"  (Cel 9605 "Ink Jet"    Nub Nub)
                           (Cel 1143 "Palm Pilot" Nub Nub)
                              
@@ -230,5 +253,333 @@ height Nub            = 0                   -- {height N}
 height(Cel k d lt rt) =
     1 + (max (height lt) (height rt))       -- {height C}
     
+{-
+    12.6 Balanced Trees
     
+    A 'node balanced' tree has the same number of nodes on the
+    both the left and right sides of the tree; insertion under
+    node balancing is expensive.
     
+    A tree is 'height balanced' if, at all levels, the height of the
+    left and right subtrees are within a difference of one.
+        
+    Height-balanced trees have the property that height
+    grows at the same rate as the logarithm of the number of data items. 
+    This makes it possible to carry out retrieval, insertion, and
+    deletion efficiently.
+    
+    Any insertion method should satisfy the following properties:
+    
+    1. The new key is inserted according to key ordering.
+    2. The tree remains balanced after the insertion.
+    3. No nodes are deleted during the insertion.
+    4. The new key exists in the tree after insertion.
+    5. Only the new key is added i.e. only one key added at a time
+    
+    Re-balancing trees, after an insertion, gets tricky as the tree
+    grows. There are 4 special cases that occur as part of the
+    general problem; two are 'easy', the other two require an
+    'ingenious insight'.
+    
+    Re-balancing the Easy Cases
+    ---------------------------
+    If we start with a tree that is ordered and balanced and insert
+    a new key so that key order is preserved, the worst that can
+    happen is that the height of the subtree with the insertion
+    is 2 greater than the height of the other subtree.
+    
+    Left subtree insertion rebalanced with Easy Right Rotation
+    ----------------------------------------------------------
+        The right subtree is an ordered, balanced tree of height
+        'n' and the left subtree is an ordered, balanced tree of
+        height n+2
+        
+        We can also assume that this left-subtree's own left
+        subtree is ordered and balanced tree of height n+2 and
+        a right subtree of of n or n+1
+          
+              Height          Height        Keys:
+               n+3       z     n+1            xL keys < x
+                |       / \     |             x < xR keys < z
+               n+2     x  zR    |             z < zR keys
+                |     / \
+               n+1   xL xR  (Note: xR can be n or n+1 in height)
+                
+        Formula:  Cel z d (Cel x a xL xR) zR
+                
+        The above tree is 'outside left heavy'; tallest part is
+        the left subtree of the left side.  
+        
+        This tree can be re-balanced using 'easy right rotation'
+        to give us the following tree:
+        
+             Height            Height       Keys:
+               n+2       x      n+3           xL keys < x
+                |       / \      |            x < xR keys < z
+               n+1     xL  z     |            z < zR
+                |         / \    |
+                n        xR zR   | (xR has a height of n or n+1, zR n)
+                
+        Formula: Cel x a xL (Cel z d xR zR)
+                         
+        Visually, we've rotated 'x' to the right, placing it in
+        the root position; our previous root, 'z', becomes
+        the right subtree of 'x' and 'xR', the old right subtree of
+        'x' becomes the left subtree of 'z'. 
+        
+        The key order of each individual subtree is maintained and
+        balance is restored. (Previously the left-side was n+3
+        and the right, n+1, for a difference of 2, now the left
+        side is n+2 and the right-side n+3 for a difference of 1).
+              
+-}
+{- 
+    st5                       30
+    height: 4                /  \
+    balanced: False        20    40
+    ordered: True         /  \   / \        'outside left heavy'
+                         10  25  N  N
+                        /  \ / \
+                       9   N N N
+                      / \
+                      N  N
+                        
+-}
+st5 = (Cel 30 "30" (Cel 20 "20"
+                       (Cel 10 "10" 
+                          (Cel 9 "9" Nub Nub)
+                          Nub)
+                       (Cel 25 "25" Nub Nub))
+                    (Cel 40 "40" Nub Nub))
+                    
+-- determine whether or not a tree is height balanced
+balanced :: SearchTree d -> Bool
+balanced (Cel k d lt rt) = (abs (height lt - height rt)) <= 1
+balanced _               = False
+
+-- determine whether or not a tree is 'outside left heavy'
+isOLH :: SearchTree d -> Bool
+isOLH (Cel z d (Cel x a xL xR) zR) =
+    let hxl = height xL
+        hxr = height xR
+        hzr = height zR
+    in   (hxl >= hxr) && (hxl <= hxr + 1) 
+       &&(hxr >= hzr) && (hxl == hzr + 1)
+isOLH Nub = False       
+       
+-- balances a tree that is outside left heavy       
+easyRight :: SearchTree d -> SearchTree d
+easyRight tree@(Cel z d (Cel x a xL xR) zR) =
+    (Cel x a xL (Cel z d xR zR))
+easyRight tree   = tree
+
+{-
+    st6 - result of 'easyRight st5'
+    height: 3
+    balanced: True          20
+    ordered: True         /    \
+                         10    30
+                        /  \  /  \
+                       9   N 25   40
+                      / \   /  \  / \
+                      N N   N  N  N  N
+                        
+                         
+-}
+st6 = Cel 20 "20" (Cel 10 "10" 
+                      (Cel 9 "9" Nub Nub) Nub) 
+                  (Cel 30 "30" 
+                      (Cel 25 "25" Nub Nub) 
+                      (Cel 40 "40" Nub Nub))
+
+{-        
+    Right subtree insertion rebalanced with Easy Left Rotation
+    ----------------------------------------------------------
+    Mirror image of what happened above; the tree is unbalanced
+    being 'outer right heavy' and can be balanced using
+    'easy left rotation'
+-}    
+{-
+    st7
+    height: 4
+    balanced: False         20
+    ordered: True         /    \
+                         10    30
+                        /  \  /  \        'outer right heavy'
+                       N   N 25   40
+                            /  \  / \
+                            N  N  N 50
+
+-}
+-- create an 'outer right heavy' tree
+st7 = Cel 20 "20" (Cel 10 "10" Nub Nub) 
+                  (Cel 30 "30" 
+                      (Cel 25 "25" Nub Nub) 
+                      (Cel 40 "40" 
+                            Nub
+                           (Cel 50 "50" Nub Nub)))
+            
+-- determine whether or not a tree is 'outer right heavy'            
+isORH :: SearchTree d -> Bool
+isORH (Cel z d zL (Cel y b yL yR)) = 
+    let hyl = height yL
+        hyr = height yR
+        hzl = height zL
+    in     hyr >= hyl && hyr <= hyl + 1
+        && hyl >= hzl && hyr == hzl + 1
+isORH _ = False
+
+-- re-balance an 'outer right heavy' tree
+easyLeft :: SearchTree d -> SearchTree d
+easyLeft tree@(Cel z d zL (Cel y b yL yR)) =
+    (Cel y b (Cel z d zL yL) yR)
+easyLeft tree    = tree
+
+{-
+    st8 - result of 'easyLeft st7'
+    height: 3
+    balanced: True          30
+    ordered: True         /    \
+                         20    40
+                        /  \  /  \     
+                      10   25 N  50
+                     /  \ / \    / \
+                    N   N N  N   N N
+    
+
+-}
+st8 = Cel 30 "30" 
+        (Cel 20 "20" 
+            (Cel 10 "10" Nub Nub) 
+            (Cel 25 "25" Nub Nub)) 
+        (Cel 40 "40" Nub (Cel 50 "50" Nub Nub))
+
+{-
+    Re-balancing the hard cases
+    ---------------------------
+    The easy cases occur when the imbalances are on the outer part
+    of the tree; the hard cases occur when the imbalances occur
+    on the inner trees.
+    
+    The 'inside right heavy case' Happens when:
+        the right subtree is 2 more than the left subtree, and
+        that right subtree's left tree is the tallest
+        
+    The fix is to apply an 'easyRight' followed by an 'easyLeft'
+        
+        
+        z                       z                        x
+      /   \     easyRight     /    \     easyLeft      /   \
+     zL    y      --->       zL     x      --->       z     y
+          /  \                    /   \             /   \  /  \
+         x   yR                 xL     y          zL    xL xR yR
+        / \                           / \
+       xL xR                         xR yR
+       
+           IRH                     Unbalanced         Balanced
+        
+    Formula:
+        IRH  --> Cel z d zL (Cel y b (Cel x a xL xR) yR)
+        Ubal --> Cel z d zL (Cel x a xL (Cel y b xR yR))
+        Bal  --> Cel x a (Cel z d zL xL) (Cel y b xR yR)
+        
+    An unbalanced tree with 'inside left heavy' case is corrected
+    by an easyLeft followed by an easyRight
+-}
+{-
+    st9
+    height:   4
+    balanced: False         20
+    ordered:  True        /    \
+                         10    30
+                        /  \  /  \        'inside right heavy'
+                       N   N 25   40
+                            /  \  / \
+                           23  27 N  N
+                          /  \/ \
+                          N  NN N
+
+-}
+st9 = Cel 20 "20" (Cel 10 "10" Nub Nub) 
+                  (Cel 30 "30" 
+                      (Cel 25 "25" 
+                          (Cel 23 "23" Nub Nub)
+                          (Cel 27 "27" Nub Nub))
+                      (Cel 40 "40" Nub Nub))
+       
+-- determine if a tree is 'inside right heay'
+isIRH :: SearchTree d -> Bool
+isIRH (Cel z d zL zR@(Cel y b yL yR)) = 
+    height zL < height zR && height yL > height yR
+isIRH _ = False
+
+-- balances a tree that is left-heavy (inside or out)
+rotR (Cel z d (Cel x a xL xR) zR) =
+    if (height xL) < (height xR)
+    then easyRight (Cel z d (easyLeft (Cel x a xL xR)) zR)
+    else easyRight (Cel z d (Cel x a xL xR) zR)
+
+-- balances a tree that is right-heavy (inside or out)
+rotL (Cel z d zL (Cel y b yL yR)) =
+    if (height yR) < (height yL)
+    then easyLeft (Cel z d zL (easyRight (Cel y b yL yR)))
+    else easyLeft (Cel z d zL (Cel y b yL yR))
+   
+{-
+    st10 - result of 'rotL st9'
+    height:   3
+    balanced: True          25
+    ordered:  True        /     \
+                         20      30
+                        /  \    /  \        
+                      10   23  27   40
+                     /  \ / \ / \  / \
+                     N  N N N N N  N N
+
+-}   
+st10 = Cel 25 "25" (Cel 20 "20" 
+                       (Cel 10 "10" Nub Nub) 
+                       (Cel 23 "23" Nub Nub)) 
+                   (Cel 30 "30" 
+                       (Cel 27 "27" Nub Nub) 
+                       (Cel 40 "40" Nub Nub))
+    
+{-
+    st12
+    height:   4
+    balanced: False                 20
+    ordered:  True                /    \
+                                10     30     'inside left heavy'
+                               /  \   /   \
+                              8   12  N    N
+                             / \ /  \
+                             N N 11  15
+                                /  \ / \
+                                N  N N N
+-}   
+st12 = Cel 20 "20" (Cel 10 "10"
+                       (Cel 8 "8" Nub Nub)
+                       (Cel 12 "12"
+                            (Cel 11 "11" Nub Nub)
+                            (Cel 15 "15" Nub Nub)))
+                   (Cel 30 "30" Nub Nub) 
+ 
+{-
+    st13 - result of 'rotR st12'
+    height:   3
+    balanced: True          12
+    ordered:  True        /     \
+                         10      20
+                        /  \    /  \        
+                       8   11  15   30
+                     /  \ / \ / \  / \
+                     N  N N N N  N  N N
+
+-}    
+st13 = Cel 12 "12" (Cel 10 "10" 
+                       (Cel 8 "8" Nub Nub)  
+                       (Cel 11 "11" Nub Nub)) 
+                   (Cel 20 "20" 
+                       (Cel 15 "15" Nub Nub) 
+                       (Cel 30 "30" Nub Nub))
+                   
