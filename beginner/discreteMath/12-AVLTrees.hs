@@ -583,3 +583,204 @@ st13 = Cel 12 "12" (Cel 10 "10"
                        (Cel 15 "15" Nub Nub) 
                        (Cel 30 "30" Nub Nub))
                    
+{-
+    When inserting a new item we need to decide which subtree
+    it goes into; an inductive process as we usually need to
+    traverse the tree to find an empty spot. Once we've made
+    the insertion, we need to check the height of the insertion
+    tree compared to the height of the tree on the other side,
+    if it is 2 or more higher, we need to invoke a rotation.
+-}
+{- insert new node  
+insert key obj  Nub = (Cel key obj Nub Nub)  -- new tree
+insert key obj tree@(Cel eKey eObj xt yt)
+    | xt == Nub && yt == Nub = insert' key obj key tree
+    | xt == Nub              = insert' key obj (getZ yt) tree
+    | otherwise              = insert' key obj (getZ xt) tree
+    where
+    getZ (Cel z _ _ _) = z
+    
+    insert' k d z (Cel x a lt rt) =
+        if z < x then
+                 if (height newL) > (height rt) + 1
+                    then rotR (Cel k d newL rt)
+                    else (Cel x a newL rt)
+        else if z > x then
+            if (height newR) > (height lt) + 1
+               then rotL (Cel x a lt newR)
+               else (Cel x a lt newR)
+        else (Cel x d lt rt)
+        where
+            newL = insert k d lt
+            newR = insert k d rt    
+-}
+
+insert k d Nub = (Cel k d Nub Nub)
+insert k d(Cel x a lf rt) = 
+    if k < x then
+        if (height newL) > (height rt) + 1
+        then rotR (Cel k d newL rt)
+        else (Cel x a newL rt)
+    else if k > x then
+        if (height newR) > (height lf) + 1
+        then rotL (Cel x a lf newR)
+        else (Cel x a lf newR)
+    else (Cel x d lf rt)
+    where
+        newL = insert k d lf
+        newR = insert k d rt            
+                
+-- try a series of inserts to build a new tree
+-- have to start with ordered, balanced tree
+-- if you start from a Nub and build up, adding to right subtee
+-- doesn't work correctly
+newTree = insert 2088 "2088" (Cel 4403 "4403"
+                                (Cel 1143 "1143" Nub Nub)
+                                (Cel 7268 "7268" Nub Nub))
+nt1 = insert 2000 "2000" newTree
+nt2 = insert 5000 "5000" nt1
+
+newTreeA = insert 7628 "7628" Nub
+nt1a     = insert 1143 "1143" newTreeA
+nt2a     = insert 4403 "4403" nt1a      -- loses first node
+   -- nt2a = Cel 4403 "4403" (Cel 1143 "1143" Nub Nub) 
+   --                        (Cel 4403 "4403" Nub Nub)
+
+-- unbalanced trees should be balanced after an insert
+st9i  = insert 12 "12" st9       
+st12i = insert 50 "50" st12     
+
+checkOrdAndBal = ordered st9i && balanced st9i
+              && ordered st12i && balanced st12i        -- True
+              
+{-
+    Insertion in Logarithmic Time
+    -----------------------------
+    We want the number of steps required for insertion to be proportional 
+    to the tree height.
+   
+    The 'Nub' constructor takes a fixed amount of time.
+   
+    For the 'Cel' constructor:
+        Assume the tree components have already been constructed
+        Haskell refers to constructed entities by [memory] 'address'
+        addresses have fixed sizes so construction of a 'Cel' takes
+        place in fixed time, regardless of the key, data object,
+        or subtree sizes
+        
+    Rotation operators (rotL, rotR) combine a fixed number of Cel
+    and Nub constructions so they complete in a fixed number of steps
+    
+    The 'height' function:
+        every time we use 'height' we traverse the tree, this is
+        time consuming; so we need a new 'height' operator.
+        
+        The trick is to avoid repeatedly calculating the tree
+        height; we can do this by storing the height in the tree.
+        
+    The new definition of our search tree would take an extra
+    Integer argument to hold the height of the tree, allowing
+    us to write 'height' as a fixed time operation.
+    
+    All the other tree operations have to be modified to use the
+    new 'height' argument.
+        
+-}      
+{-
+    Deleting an Item
+    ----------------
+    When deleting an item we want to be sure the result tree remains
+    ordered and balanced.
+    
+    The firs step is to figure out how to delete a key at the root
+    of a tree. We can break this into two cases, one easy, one hard.
+    The 'easy' case occurs when the left subtree is a Nub; all we
+    have to do is return the right subtree.
+    
+    When the left subtree is not null we have more to do. The idea
+    is to march down 'the spine' on the right side of the left subtree
+    until we reach a Cel whose right side is a Nub; we'll call this
+    node the 'sacrum'. The 'sacrum' is the node with the key 'x' in
+    the leftmost tree. The left subtree of the sacrum will have a
+    height of 0. We cache the key and data of the sacrum, replace
+    it by its left subtree and perform right rotations as needed
+    all the way back up the spine.
+    
+    When we reach the top of the spine we create a new tree with
+    (1) the key and date being the key and data items cached from 
+        the sacrum
+    (2) the left subtree being the one we constructed as we came
+        back up the spine
+    (3) the right subtree being the right subtree from the original
+        tree
+        
+    Last, if necessary, we rotate the tree left to get back in balance.
+    
+    Placing the last, sacrum, key and data at the root preserves order
+    as it was the largest key in the left subtree and smaller than
+    the root and right subtree keys.
+    
+    To write the above as formulae it helps to consider the various
+    parts of the transformation separately.
+    
+    Shrinking the Spine
+    -------------------
+    Part of the transformation involves creating a new left subtree
+    with a shrunken spine and the sacrum. 
+-}
+
+-- shrink the spine of the tree
+shrink :: SearchTree d 
+       -> (Integer,             -- key from sacrum
+           d,                   -- data object from the sacrum
+           SearchTree d)        -- new left subtree
+shrink(Cel y b lf rt) = 
+    if rt == Nub then (y, b, lf)
+    else if (height lf) > (height shrunken) + 1
+    then (x, a, rotR (Cel y b lf shrunken))
+    else (x, a, Cel y b lf shrunken)
+    where
+        (x, a, shrunken) = shrink rt
+        
+-- function to delete the root of a tree
+delRoot :: SearchTree d -> SearchTree d
+delRoot (Cel z d Nub zR) = zR 
+delRoot (Cel z d (Cel y b lf rt) zR) = 
+    if (height zR) > (height shrunken) + 1
+    then rotL (Cel x a shrunken rt)
+    else (Cel x a shrunken rt)
+    where
+        (x, a, shrunken) = shrink (Cel y b lf rt)        
+        
+{-
+    With the above functions in place we can now look at what's
+    needed to delete a key; any key to be deleted will be at
+    the root of a subtree of the original tree. First, we need
+    to locate that subtree and call 'delRoot' and then balance
+    the tree, if necessary.
+    
+-}  
+delete Nub k = Nub
+delete tree@(Cel z d lf rt) k 
+    | k == z   = delRoot tree
+    | k < z    = if (height rt) > (height newL) + 1 
+                 then rotL (Cel z d newL rt)
+                 else (Cel z d newL rt)
+    |otherwise = if (height lf) > (height newR) + 1
+                 then rotR (Cel z d lf newR)
+                 else (Cel z d lf newR)
+    where
+        newL = delete lf k
+        newR = delete rt k      
+        
+st14 = delete st13 11       -- remains ordered and balanced
+st15 = delete st13 20       -- remains ordered and balanced
+st16 = delete st13 12       -- removing the root at the top leaves
+                            -- the tree unordered and with a duplicate
+                            -- key
+{- 
+    Cel 11 "11" (Cel 10 "10" 
+                  (Cel 8 "8" Nub Nub) 
+                   Nub) 
+                (Cel 11 "11" Nub Nub)      
+-}                          
