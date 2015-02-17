@@ -11,7 +11,7 @@ import Data.List
 {-
     6.1 Basic Notions
     -----------------
-        function  - transforms one given object into another
+        function  - transforms one object into another
         arguments - the objects given to a function
         values    - the results of the transformation (image)
         domain    - set of function arguments
@@ -36,7 +36,7 @@ import Data.List
            such that (x,y) in f.
            
     If x in dom(f), then f(x) is, by definition the 'unique object'
-    y in ran(f) for which (x,y) in f. Where the domain: dom(f) of
+    y in ran(f) for (x,y) in f. Where the domain: dom(f) of
     the function f is { x | (exists y) ((x,y) in f))}
     
     So, if 'f' is a function then:
@@ -62,7 +62,7 @@ fct2list f xs = [ (x, f x) | x <- xs ]
 ranPairs :: Eq b => [(a,b)] -> [b]
 ranPairs f = nub [ y | (_,y) <- f ]
 
--- if a function is defined on an enumberable domain, we can list
+-- if a function is defined on an enumerable domain, we can list
 -- its values
 listValues  :: Enum a => (a -> b) -> a -> [b]
 listValues f i = (f i) : listValues f (succ i) 
@@ -91,7 +91,7 @@ listRange f = [ f i | i <- [minBound..maxBound] ]
                     f : X -> Y
                     
         IF dom(f) = X and ran(f) is a subset of Y (Y is called the
-        'co-domain of f'
+        'co-domain of f')
         
         A function is 'defined on X' if dom(f) = X.
         
@@ -133,5 +133,80 @@ uncurry3 f (x,y,z) = f x y z
     
     If f:X -> Y and g:X -> Z and (forall x in X)(f(x)=g(x)), then
     f and g are equal only if Y = Z.
+-}
+-- following equations all define the same function
+f1 x = x^2 + 2 * x + 1
+g1 x = (x + 1)^2
+f1'  = \x -> x^2 + 2 * x + 1
+g1'  = \x -> (x + 1)^2
+
+ex68 x = f1 x == g1 x && f1' x == g1' x && f1 x == f1' x
+
+{-
+    Recurrences and Closed Forms
+    ----------------------------
+    A definition for a function f: N -> A, in terms of algebraic
+    operations, is a closed form definition.
+    
+    A function definition for 'f' in terms of the values of 'f' for
+    smaller arguments is called a 'recurrence' for 'f'.
+    
+    Closed forms allow for a more efficient computation than 
+    recurrence forms as the computation time does not grow
+    exponentially  with the size of the argument.
+    
+-}
+-- function sums all numbers between 1 and n
+-- recurrence (recursive)
+g69 0 = 0
+g69 n = g69 (n-1) + n
+
+-- closed form definition of the same function
+g69' n = ((n+1) * n) / 2
+
+-- Exercise 6.10 - give a closed form definition of the following
+ex610 0 = 0
+ex610 n = ex610 (n-1) + (2*n)
+
+ex610' n = (n+1) * n
+
+-- Exercise 6.11 - give a closed form definition of the following
+ex611 0 = 0
+ex611 n =  ex611 (n-1) + (2*n-1)
+
+ex611' n = n * n
+
+{-
+    Not always easy to find a closed form; take, as example,
+    the factorial function; computationally, there is no
+    difference between the following ('product' just hides
+    the recursion)
 
 -}
+fac 0 = 1
+fac n = fac (n-1) * n
+
+fac' n = product [1..n]
+
+{-
+    Def 6.12 Restrictions
+    ---------------------
+        Suppose f:X -> Y and A is a subset of X.
+        The 'restriction of f to A' is the function h:A->Y
+        defined by h(a) = f(a).
+    
+        Following is an example for functions implemented as
+        type a -> b and another for functions on lists of pairs
+        
+    [Note: the 'restriction' is determined by the class constraint
+           the arguments must belong to the 'Eq' class]
+-}
+restrict :: Eq a => (a -> b) -> [a] -> a -> b
+restrict f xs x | elem x xs = f x
+                | otherwise = error "argument not in domain"
+                
+restrictPairs :: Eq a => [(a,b)] -> [a] -> [(a,b)]
+restrictPairs xys xs = [ (x,y) | (x,y) <- xys, elem x xs ]
+
+                
+

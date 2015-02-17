@@ -286,3 +286,171 @@ rippleCmp z = foldl fullCmp (False,True,False) z
         Main>     
 
 -}
+{-
+    Exercise 12
+    
+    Show that the and4 logic gate, which takes four inputs a, b, c,
+    and d and outputs a /\ b /\ c /\ d, can be implemented using only 
+    and2 gates.
+-}
+and4 :: Signal a => a -> a -> a -> a -> a
+and4 a b c d = and2 (and2 a b) (and2 c d)
+
+{-
+    Exercise 13
+    
+    Work out a complete set of test cases for the full adder, and
+    calculate the expected results. Then simulate the test cases and 
+    compare with the predicted results.
+
+    Ans: see Exercise 5
+-}
+{-
+    Exercise 14
+    
+    Suppose that a computer has 8 memory locations, with addresses
+    0, 1, 2, . . . 7. Notice that we can represent an address with 3 bits,
+    and the size of the memory is 2^3 locations. We name the address bits
+    a0 a1 a2, where a0 is the most significant bit and a2 is the least 
+    significant.
+    
+    When a memory location is accessed, the hardware needs to send a signal
+    to each location, telling it whether it is the one selected by the 
+    address a0a1a2. Thus there are 8 select signals, one for each location, named
+    s0, s1, . . . , s7. 
+    
+    Design a circuit that takes as inputs the three address bits     
+    a0, a1, a2, and outputs the select signals s0, s1, . . . , s7. 
+    Hint: use demultiplexors,  arranged in a tree-like structure. 
+    (Note: modern computers have an address size from 32 to 64 bits, 
+           allowing for a large number of locations, but a 3-bit address 
+           makes this exercise more tractable!)  
+
+    Ans:
+
+        3:8 Decoder (Demultiplexer) 
+        
+        Truth Table
+        
+        p  a b c  0 1 2 3 4 5 6 7     Formula for gates 
+        -  -----  ---------------     -----------------
+        0  0 0 0  1 0 0 0 0 0 0 0     T & !a & !b & !c    
+        1  0 0 1  0 1 0 0 0 0 0 0     T & !a & !b &  c    
+        2  0 1 0  0 0 1 0 0 0 0 0     T & !a &  b & !c
+        3  0 1 1  0 0 0 1 0 0 0 0     T & !a &  b &  c
+        4  1 0 0  0 0 0 0 1 0 0 0     T &  a & !b & !c
+        5  1 0 1  0 0 0 0 0 1 0 0     T &  a & !b &  c
+        6  1 1 0  0 0 0 0 0 0 1 0     T &  a &  b & !c
+        7  1 1 1  0 0 0 0 0 0 0 1     T &  a &  b &  c
+        
+        
+        Input: 
+            3-bit address of gate to be used
+            
+        Output:
+            list of 8 address positions with only
+            one set to True
+                    
+    References used:
+        https://learn.digilentinc.com/Documents/414
+        https://gist.github.com/kanak/885961
+        
+    Note: the text did not provide a solution
+          the solutions below do not create a tree-like formation
+          as requested 
+          [have to think about how that could be done; use a
+           series of 'and2' gates and compares?]
+
+-}       
+-- initial solution, works but not really a circuit design              
+--decoder3x8 :: Signal a => (a,a,a) -> [a]
+decoder3x8 (a,b,c) = dmux (addr a b c) [True,True,True]
+    where                 
+        -- addr converted for use with 'and2' operator
+        addr a b c = [[not a, not b, not c],
+                      [not a, not b,     c],
+                      [not a,     b, not c],
+                      [not a,     b,     c],
+                      [    a, not b, not c],
+                      [    a, not b,     c],
+                      [    a,     b, not c],
+                      [    a,     b,     c]]
+                             
+        -- set memory positions
+        dmux (s:ss) ctrl = (onOff s ctrl) : dmux ss ctrl
+        dmux [] _        = []
+        
+        -- switch memory position on or off
+        onOff a c = and $ map (uncurry (&&)) (zip a c)
+
+-- better solution using 'and4' after viewing kanak's solution
+decoder3x4 :: Signal a => (a,a,a) -> a -> [a]
+decoder3x4 (a0,a1,a2) ctrl = [and4 na0 na1 na2 ctrl,
+                              and4 na0 na1  a2 ctrl,
+                              and4 na0  a1 na2 ctrl,
+                              and4 na0  a1  a2 ctrl]
+    where
+        na0 = inv a0
+        na1 = inv a1
+        na2 = inv a2
+        
+decoder3x8' :: Signal a => (a,a,a) -> a -> [a]
+decoder3x8' (a0,a1,a2) ctrl =  
+     decoder3x4 (a0,a1,a2) ctrl 
+  ++ reverse (decoder3x4 (inv a0, inv a1, inv a2) ctrl)
+  
+-- examples for each memory position
+ex14_0 = decoder3x8' (False,False,False) True
+ex14_1 = decoder3x8' (False,False,True ) True
+ex14_2 = decoder3x8' (False,True ,False) True
+ex14_3 = decoder3x8' (False,True ,True ) True
+ex14_4 = decoder3x8' (True ,False,False) True
+ex14_5 = decoder3x8' (True ,False,True ) True
+ex14_6 = decoder3x8' (True ,True ,False) True
+ex14_7 = decoder3x8' (True ,True ,True ) True
+
+{-
+    Output:
+    
+        Main> ex14_0
+        [True,False,False,False,False,False,False,False]
+        Main> ex14_1
+        [False,True,False,False,False,False,False,False]
+        Main> ex14_2
+        [False,False,True,False,False,False,False,False]
+        Main> ex14_3
+        [False,False,False,True,False,False,False,False]
+        Main> ex14_4
+        [False,False,False,False,True,False,False,False]
+        Main> ex14_5
+        [False,False,False,False,False,True,False,False]
+        Main> ex14_6
+        [False,False,False,False,False,False,True,False]
+        Main> ex14_7
+        [False,False,False,False,False,False,False,True]
+        Main>     
+-}
+{-
+    Exercise 15
+    
+    Does the definition of rippleAdd allow the word size to be 0? If
+    not, what prevents it? If so, what does it mean?
+    
+    Ans:
+        rippleAdd False [] returns (False, []) so technically,
+        yes, word size can be zero.
+        
+        [From text answer: means you can connect m-bit and n-bit
+         adders to get an (m+n-bit)adder]
+-}
+{-
+    Exercise 16
+    
+    Does the definition of rippleAdd allow the word size to be negative?
+    If not, what prevents it? If so, what does it mean?
+    
+    Ans: No. 
+    
+        [From text: Lists are used for input and lists can't have 
+                    negative lengths]
+-}
