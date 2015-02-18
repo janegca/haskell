@@ -208,5 +208,181 @@ restrict f xs x | elem x xs = f x
 restrictPairs :: Eq a => [(a,b)] -> [a] -> [(a,b)]
 restrictPairs xys xs = [ (x,y) | (x,y) <- xys, elem x xs ]
 
+{-
+    Def 6.13 Image and Co-image
+    ---------------------------
+    Suppose that f :X->Y, A is a subset of X and B is a subset of Y
+    
+        f[A] = {f(x) | x in A} is called the 'image of A under f'
+        f^(-1)[B] = {x in X| f(x) in B} is called the 'co-image of B
+                                        under f'
+                                        
+    from which we get
+        f[X]      = ran(f)          -- range
+        f^(-1)[Y] = dom(f)          -- domain
+        y in f[A] <-> (exists x in A(y = f(x))
+        x in f^(-1)[B] <-> f(x) in B
+        
+-}         
+-- image of f is all unique results of (f x) for every x in xs   
+image :: Eq b => (a -> b) -> [a] -> [b]
+image f xs = nub [f x | x <- xs]
+
+-- the coimage of f is all x in xs where the value (f x) is in ys
+coImage :: Eq b => (a -> b) -> [a] -> [b] -> [a]
+coImage f xs ys = [x | x <- xs, elem (f x) ys ]
+
+ex613a = image (*2) [1,2,3]                 -- [2,4,6]
+ex613b = coImage (*2) [1,2,3] [2,3,4]       -- [1,2]
+
+-- image and coImage for lists of pairs
+imagePairs :: (Eq a, Eq b) => [(a,b)] -> [a] -> [b]
+imagePairs f xs = nub [y | (x,y) <- f, elem x xs]
+
+coImagePairs :: (Eq a, Eq b) => [(a,b)] -> [b] -> [a]
+coImagePairs f ys = [x | (x,y) <- f, elem y ys]
+
+{-
+    Exercise 6.14
+    
+    Consider the relation R = {(0,4), (1,2), (1,3)}
+    
+    1. I R a function?
+            No. The input 1 gives two different output values.
+            
+    2. Remember: R^(-1_ = {(b,a) |(a,b) in R} is the inverse of the
+       relation R.
+            Is R^(-1) a function?
+                R^(-1) = {(4,0), (2,1), (3,1)}  so Yes.
                 
+            If so, determine dom(R^(-1)) and ran(R^-1)
+                domain is {2,3,4}
+                range  is {0,1}                           
+-}
+{-
+    Exercise 6.16
+    
+    Let X = {0,1,2,3}, Y = {2,3,4,5}
+        f = { (0,3), (1,2), (2,4), (3,2) }
+    Determine
+        f restricted to {0,3}       -> {(0,3), (3,2)}
+        f[{1,2,3}]                  -> { (1,2), (2,4), (3,2) } NOPE!
+        inv f [{2,4,5}              -> { (2,1), (2,3), (4,2) } NOPE!
+    Check your answers with the implementation
+    
+-}
+-- provided solution
+ex616a = [(0,3), (1,2), (2,4), (3,2) ]
+ex616b = list2fct ex616a
+
+ex616c = fct2list (restrict ex616b [0,3]) [0,3]  -- [(0,3),(3,2)]
+ex616d = image ex616b [1,2,3]                    -- [2,4]
+ex616e = coImage ex616b [0,1,2,3] [2,4,5]        -- [1,2,3]
+
+{-
+    6.2 Surjections, Injections, Bijections
+    ---------------------------------------
+    If f is a function from X to Y, there may be elements of Y that
+    are not in f[X]. Functions for which this is 'not' true warrant
+    special names.
+    
+    Surjection: if every element b in Y occurs as a function value of at
+                least one a in X ie if f[X] = Y
+                
+    Injection:  if every b in Y is a value of at least one a in X
+    
+    Bijection:  if f is both injective and surjective
+-}
+-- given a function and its domain, determine if the function is 
+-- injective
+injective :: Eq b => (a -> b) -> [a] -> Bool
+injective  f []     = True
+injective f (x:xs) = notElem (f x) (image f xs) && injective f xs
+
+surjective :: Eq b => (a -> b) -> [a] -> [b] -> Bool
+surjective f xs []     = True
+surjective f xs (y:ys) = elem y (image f xs) && surjective f xs ys
+
+ex622  = list2fct [(0,1), (1,0), (0,2) ]
+ex622a = injective ex622 [0,1]                  -- True
+ex622b = surjective ex622 [0,1] [0,1,2]         -- False
+
+{-
+    Exercise 6.23
+        Implement a test for bijectivity
+-}
+bijective :: Eq b => (a -> b) -> [a] -> [b] -> Bool
+bijective f xs ys = surjective f xs ys && injective f xs
+
+ex623 = bijective ex622 [0,1] [0,1,2]           -- False
+
+{-
+    Exercise 6.24
+    
+    Implement tests injectivePairs, surjectivePairs, bijectivePairs
+-}
+injectivePairs :: (Eq a, Eq b) => [(a,b)] -> [a] -> Bool
+injectivePairs f xs = injective (list2fct f) xs
+
+surjectivePairs :: (Eq a, Eq b) => [(a,b)] -> [a] -> [b] -> Bool
+surjectivePairs f xs ys = surjective (list2fct f) xs ys
+
+bijectivePairs :: (Eq a, Eq b) => [(a,b)] -> [a] -> [b] -> Bool
+bijectivePairs f xs ys = bijective (list2fct f) xs ys
+
+{-  
+    Exercise 6.27
+    
+    Implement a function
+        injs :: [Int] -> [Int] -> [[(Int,Int)]]
+    that takes a finite domain and codomain of tyep Int and
+    produces the list of all injectives from domain to codomain,
+    given as lists of integer pairs.
+
+-}
+-- provided solution
+injs :: [Int] -> [Int] -> [[(Int,Int)]]
+injs [] xs     = [[]]
+injs xs []     = []
+injs (x:xs) ys =
+    concat [ map ((x,y):) (injs xs (ys \\ [y])) | y <- ys ]
+
+ex627 = injs [0,1,2] [0,1,2]
+
+{-
+    Output:
+    
+    *Main> ex627
+    [[(0,0),(1,1),(2,2)],
+     [(0,0),(1,2),(2,1)],
+     [(0,1),(1,0),(2,2)],
+     [(0,1),(1,2),(2,0)],
+     [(0,2),(1,0),(2,1)],
+     [(0,2),(1,1),(2,0)]]
+    
+-}
+{-
+    Example 6.28
+    
+    The bijections on a finite set A correspond exactly to the
+    permutations of A. Implement a function
+            perms :: [a] -> [[a]]
+    that gives all permutations of a finite list. The call 
+            perms [1,2,3]
+    should yield:
+            [[1,2,3],[2,1,3],[2,3,1],[1,3,2],[3,1,2],[3,2,1]]
+            
+    Hint: to get the permutations of (x:xs), take all the possible
+          ways of inserting x in a permutation of xs.
+
+-}
+-- provided solution
+perms :: [a] -> [[a]]
+perms []     = [[]]
+perms (x:xs) = concat (map (insrt x) (perms xs))
+    where
+        insrt :: a -> [a] -> [[a]]
+        insrt x []     = [[x]]
+        insrt x (y:ys) = (x:y:ys) : map (y:) (insrt x ys)
+
 
