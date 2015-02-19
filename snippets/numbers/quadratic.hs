@@ -1,4 +1,8 @@
 -- quadratic function
+import Data.Maybe 
+
+-- Reference: Discrete Math using a Computer
+
 -- solves the expression: x * x^2 + b * x + c = 0 with two real solutions
 -- (x1,x2)
 

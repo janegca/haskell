@@ -1,0 +1,1 @@
+An collection of useful code snippets semi-organized into categories.

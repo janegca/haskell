@@ -115,7 +115,7 @@ extract (Just x : xs)  = x : extract xs
 -}
 f :: String -> String -> Maybe Int
 f str [] = Nothing
-f [] _  = Nothing
+f [] _   = Nothing
 f str substr = if isPrefixOf substr str then Just 0 else find 1 str
     where
         find idx (x:xs) | isPrefixOf substr xs = Just idx
