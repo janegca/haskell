@@ -1,3 +1,9 @@
+-- Notes from Chalmers 2014 TDA452 Functional Programming Course
+-- Week 3
+-- Source:
+--   http://www.cse.chalmers.se/edu/year/2014/course/
+--        TDA452_Functional_Programming
+
 module L03B where
 
 -- code from the course .pdf's

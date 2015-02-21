@@ -31,6 +31,13 @@ extract []             = []
 extract (Nothing : xs) = extract xs
 extract (Just x : xs)  = x : extract xs
 
+-- partition a list on the results of a given function [HR]
+-- Ex fct2listpart even [1..5] -> [[1,3,5],[2,4]]
+fct2listpart :: (Eq a, Eq b) => (a -> b) -> [a] -> [[a]]
+fct2listpart f []     = []
+fct2listpart f (x:xs) = xclass : fct2listpart f (xs \\ xclass)
+    where xclass = x : [ y | y <- xs, f x == f y ]
+
 -- return the intersection of two lists (items appearing in both) [DM]
 intersection :: Eq a => [a] -> [a] -> [a]
 intersection xs [] = []

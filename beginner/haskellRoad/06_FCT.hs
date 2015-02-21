@@ -7,6 +7,7 @@
         
 -}
 import Data.List
+import Data.Char (isAlpha)
 
 {-
     6.1 Basic Notions
@@ -385,4 +386,131 @@ perms (x:xs) = concat (map (insrt x) (perms xs))
         insrt x []     = [[x]]
         insrt x (y:ys) = (x:y:ys) : map (y:) (insrt x ys)
 
+{-
+    6.3 Function Composition
+    ------------------------
+    
+    Suppose f:X->Y and g:Y->Z, then the 'co-domain' of 'f' 
+    coincides with the 'domain' of 'g' and the composition
+    of f and g is (g . f):X->Z or (g . f)(x) = g(f x)
+    i.e. first apply 'f', then apply 'g' or 'g after f'
+    
+    (g . f) has the domain of 'f' and the co-domain of 'g'
+    
+    The identity function acts as a unit element for function
+    composition.
+    
+    Suppose that f:x->Y and g:Y->Z, then
+        (g . f) injective  -> f injective
+        (g . f) surjective -> g surjective
+        f and g injective  -> (g . f) injective
+        f and g surjective -> (g . f) surjective
+        
+    Inverse Function
+    ----------------
+    A function has an inverse iff it is bijective and that inverse
+    is unique.
+    
+    If f:X->Y, g:Y->X then (g . f) = l_x and 'g' is the 'left-inverse'
+    of 'f', and 'f' the 'right-inverse' of 'g'.
+    
+    Every function that has a surjective right-inverse is  a biejection
+    Every function that has an injective left-inverse is a biejection
+    
+-}        
+-- Celsius to Fahrenheit, an example of a function and its inverse
+c2f, f2c :: Int -> Int
+c2f x = div (9 * x) 5 + 32
+f2c x = div (5 * (x - 32)) 9
 
+{-
+    6.5 Partial Functions
+    ---------------------
+    A 'partial function' from X to Y is a function with its
+    domain included in X and its range included in Y. 
+    Some values of (f x) are undefined.
+    In Haskell, the undefined values may produce an error
+    eg \ x -> if x < 0 then error "arg out of range" else x+1
+    
+    but a more useful technique is to use a list
+    eg \ x -> if x < 0 then [] else [x+1]
+    
+    or one can use the 'Maybe' datatype
+    eg \ x -> if x < 0 then Nothing else (Just x+1)
+    
+-}
+-- composing partial functions
+pcomp :: (b -> [c]) -> (a -> [b]) -> a -> [c]
+pcomp g f = \ x -> concat [ g y | y <- f x ]
+
+mcomp :: (b -> Maybe c) -> (a -> Maybe b) -> a -> Maybe c
+mcomp g f = (maybe Nothing g) . f
+
+-- the maybe function allows for a variety of ways of dealing
+-- with partial applications, for example, the following
+-- converts a partial application to an error
+part2error :: (a -> Maybe b) -> a -> b
+part2error f = (maybe (error "value undefined") id) . f
+
+{-
+    Exercise 6.57
+    
+    Define a partial function
+        stringCompare :: String -> String -> Maybe Ordering
+        
+    for ordering strings consisting of alphabetic characters
+    in the usual order. If a non-alphabetic symbol occurs, the 
+    function should return Nothing. Use isAlpha for the property
+    of being an alphabetic character.
+-}
+-- provided solution
+stringCompare :: String -> String -> Maybe Ordering
+stringCompare xs ys | any (not . isAlpha) (xs ++ ys) = Nothing
+                    | otherwise = Just (compare xs ys)
+                    
+{-
+    6.6 Functions as Partitions
+    ---------------------------
+    Data is often classified (partitioned) by way of functions
+    i.e "gender of x", "color of x", "age of x"; such 'partitions'
+    have an 'equivalence' relation.
+    
+    The 'fct2equiv' function maps a function to the equivalence
+    relation, inducing the partition that corresponds with the 
+    function
+    
+    ex to test equality for modulo n
+           fct2equiv (`rem` 3) 2 14   -> True
+-}                    
+fct2equiv :: Eq a => (b -> a) -> b -> b -> Bool
+fct2equiv f x y = (f x) == (f y)
+
+block :: Eq b => (a -> b) -> a -> [a] -> [a]
+block f x list = [ y | y <- list, f x == f y ]
+
+ex664a = block (`rem` 3) 2 [1..20]
+ex664b = block (`rem` 7) 4 [1..20]
+
+{-
+    Exercise 6.65
+    
+    Implement an operation 'fct2listpart' that takes a function
+    and a domain and produces the list partition that the function
+    generates on the domain.
+    
+    Examples
+        fct2listpart even [1.20]
+        [[1,3,5,7,9,11,13,15,17,19], [2,4,6,8,10,12,14,16,18,20]]
+        
+        fct2lstpart (\ n -> rem n 3) [1..20]
+        [[1,4,7,10,13,16,19],[2,5,8,11,14,17,20],[3,6,9,12,15,18]]
+        
+    [Note: (\\) is the 'list difference' operator ]
+-}
+-- provided solution
+fct2listpart :: (Eq a, Eq b) => (a -> b) -> [a] -> [[a]]
+fct2listpart f []     = []
+fct2listpart f (x:xs) = xclass : fct2listpart f (xs \\ xclass)
+    where xclass = x : [ y | y <- xs, f x == f y ]
+
+    

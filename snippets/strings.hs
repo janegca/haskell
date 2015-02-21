@@ -79,6 +79,11 @@ stripBlank str = [c | c <- str, c /= ' ']
 stripChar :: Char -> String -> String
 stripChar chr str = [c | c <- str, c /= chr]
 
+-- compare two string based on alpha ordering [HR]
+stringCompare :: String -> String -> Maybe Ordering
+stringCompare xs ys | any (not . isAlpha) (xs ++ ys) = Nothing
+                    | otherwise = Just (compare xs ys)
+
 -- find all digits in a string and add them together [CIS914]
 sumStringDigits :: String -> Int
 sumStringDigits = sum . mapMaybe read_digit
