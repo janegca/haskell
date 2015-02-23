@@ -468,12 +468,401 @@ catalan :: Integer -> Integer
 catalan 0 = 1
 catalan (n+1) = sum [ (catalan i) * (catalan (n-i)) | i <- [0..n] ]
 
-      
--- from STAL.hs
-display :: Int -> String -> IO ()
-display n str = putStrLn (display' n 0 str)
-  where 
-  display' _ _ [] = []
-  display' n m (x:xs) | n == m    = '\n': display'  n   0  (x:xs)
-                      | otherwise =  x  : display'  n (m+1)  xs 
+{-
+    7.4 Induction and Recursion over Trees
+    --------------------------------------
+    A single leaf is a binary tree of depth 0
+    
+    If t1 and t2 are binary trees, then the result of joining
+    t1 and t2 under a single root is (leaf t1 t2) with a depth 
+    of 1 + the maximum of the depth of t1 and t2.
+    
+    In general, the number of nodes in a balanced tree of depth
+    n is 2^(n+1) - 1.
+    
+    Basic tree definitions in Haskell are given below
+-}
+data BinTree = L | N BinTree BinTree deriving Show
 
+makeBinTree :: Integer -> BinTree
+makeBinTree 0 = L
+makeBinTree n = N (makeBinTree (n-1)) (makeBinTree (n-1))
+
+count :: BinTree -> Integer
+count L         = 1
+count (N t1 t2) = 1 + count t1 + count t2
+
+depth :: BinTree -> Integer
+depth L = 0
+depth (N t1 t2) = (max (depth t1) (depth t2)) + 1
+
+balanced :: BinTree -> Bool
+balanced L = True
+balanced (N t1 t2) = (balanced t1) && (balanced t2) 
+                  && depth t1 == depth t2
+                  
+{-
+    Exercise 7.25
+    
+    Write a Haskell definition of ternary trees, plus procedures
+    for generating balanced ternary trees and counting their 
+    nodes.
+    
+    Note: total nodes in a balanced ternary tree should equal
+          (3^(n+1) - 1)/2
+-}        
+data TTree = TL | TN TTree TTree TTree deriving Show
+
+makeTTree :: Integer -> TTree
+makeTTree 0 = TL
+makeTTree n = TN (makeTTree (n-1)) (makeTTree (n-1)) (makeTTree (n-1))
+
+count' :: TTree -> Integer
+count' TL            = 1
+count' (TN t1 t2 t3) = 1 + count' t1 + count' t2 + count' t3
+
+depth' :: TTree -> Integer
+depth' TL            = 0
+depth' (TN t1 t2 t3) = let dt1 = depth' t1
+                           dt2 = depth' t2
+                           dt3 = depth' t3
+                       in 1 + max (max dt1 dt2) dt3
+
+balanced' :: TTree -> Bool
+balanced' TL = True
+balanced' (TN t1 t2 t3) =
+       balanced' t1 && balanced' t2 && balanced' t3 
+    && (depth' t1 == depth' t2) && (depth' t2 == depth' t3)
+
+{-
+   If we define a tree with integer numbers in the at the
+   internal nodes, the tree is 'ordered' if, for every node
+   N, the integer numbers in the left tree are less than
+   N and the integer numbers in the right tree are greater
+   than N.
+
+-}    
+data Tree = Lf | Nd Int Tree Tree deriving Show
+
+{-
+    Exercise 7.28
+    
+    Write a function that inserts a number n in an ordered tree
+    in such a way that the tree remains ordered.
+-}      
+insertTree :: Int -> Tree -> Tree
+insertTree n Lf = Nd n Lf Lf
+insertTree n t@(Nd x t1 t2) 
+    | n < x     = Nd x (insertTree n t1) t2
+    | n > x     = Nd x t1 (insertTree n t2)
+    | otherwise = t
+
+{-
+    Exercise 7.29
+    
+    Write a function 'list2tree' that converts a list of
+    integers to an ordered tree, with the integers at
+    the tree nodes. The type is [Int] -> Tree. Also,
+    write a function 'tree2list' for conversion
+    in the other direction.
+
+-}
+list2tree :: [Int] -> Tree
+list2tree []     = Lf
+list2tree (x:xs) = insertTree x (list2tree xs)
+
+tree2list :: Tree -> [Int]
+tree2list Lf           = []
+tree2list (Nd n t1 t2) = (tree2list t1) ++ n : (tree2list t2)
+
+{-
+    Exercise 7.30
+    
+    Write a function that checks whether a given integer i
+    occurs in an ordered tree.
+
+-}
+inTree :: Int -> Tree -> Bool
+inTree n Lf           = False
+inTree n (Nd x t1 t2) | n == x    = True
+                      | n < x     = inTree n t1
+                      | otherwise = inTree n t2
+                      
+{-
+    Exercise 7.31
+    
+    Write a function that merges two ordered trees into a
+    new tree containing all the numbers of the input trees.
+-}                      
+mergeTrees :: Tree -> Tree -> Tree
+mergeTrees t1 Lf = t1
+mergeTrees Lf t2 = t2
+mergeTrees t1@(Nd x a b) t2@(Nd y c d) 
+    | x == y = Nd x (mergeTrees a c) (mergeTrees b d)
+    | x < y  = Nd y (mergeTrees t1 c) d
+    | otherwise = Nd x a (mergeTrees b t2)                      
+
+-- provided solution
+mergeTrees' :: Tree -> Tree -> Tree
+mergeTrees' t1 t2 = foldr insertTree t2 (tree2list t1)    
+
+{-
+    Exercise 7.32
+    
+    Write a function that counts the number of steps that
+    are needed to reach a number i in an ordered tree.
+    The function should give 0 if i at the top node,
+    -1 if i does not occur in the tree at all.
+-}
+stepsToN :: Int -> Tree -> Int
+stepsToN n Lf   = -1
+stepsToN n t@(Nd x t1 t2) =
+    if found then steps else -1
+    where  -- inefficient, going thru tree twice
+        found = inTree n t        
+        
+        steps | n == x    = 0
+              | n < x     = 1 + stepsToN n t1
+              | otherwise = 1 + stepsToN n t2
+              
+-- provided solution
+findDepth :: Int -> Tree -> Int
+findDepth _ Lf = -1
+findDepth n (Nd m left right)
+    | n == m = 0
+    | n < m  = if d1 == -1 then -1 else d1 + 1
+    | n > m  = if d2 == -1 then -1 else d2 + 1
+    where d1 = findDepth n left
+          d2 = findDepth n right              
+              
+{-
+    Following is a general data type for trees with information
+    at the internal nodes
+-}              
+
+data Tr a = Nil | T a (Tr a) (Tr a) deriving (Eq, Show)
+
+insertT :: (Ord a) => a -> Tr a -> Tr a
+insertT n Nil = T n Nil Nil
+insertT n t@(T x t1 t2) 
+    | n < x     = T x (insertT n t1) t2
+    | n > x     = T x t1 (insertT n t2)
+    | otherwise = t
+
+list2T :: Ord a => [a] -> Tr a
+list2T []     = Nil
+list2T (x:xs) = insertT x (list2T xs)
+  
+{-
+    Exercise 7.33
+    
+    Write a function
+        mapT :: (a -> b) -> Tr a -> Tr b
+        
+    that does for binary trees what 'map' does for lists.
+-}
+mapT :: (a -> b) -> Tr a -> Tr b
+mapT f Nil = Nil
+mapT f (T x t1 t2) = T (f x) (mapT f t1) (mapT f t2)
+
+ex733 = let t = list2T [1..10] in mapT (*2) t
+                      
+{-
+    Exercise 7.34
+    
+    Write a function
+        foldT :: (a -> b -> b -> b) -> b -> (Tr a) -> b
+        
+    that does for binary trees what foldn does for naturals.
+-}
+-- provided solution
+foldT :: (a -> b -> b -> b) -> b -> (Tr a) -> b
+foldT h c Nil = c
+foldT h c (T x left right) = h x (foldT h c left) (foldT h c right)
+    
+{-
+    Exercise 7.35
+    
+    Conversion of a tree to a list can be done in various ways
+    depending on when the node is visited.
+    
+    Preorder Traversal
+        first visit the node, followed by the left subtree and then
+        the right subtree
+
+    Inorder Traversal
+        visit the left subtree, the node and then the right subtree
+        
+    Postorder Traversal
+        visit the left subtree, the right subtree and then the node
+        
+    Define these three conversion functions from trees to lists
+    in terms of the foldT function in exercise 7.34
+-}
+-- provided solution  
+preorderT, inorderT, postorderT :: Tr a -> [a]
+preorderT = foldT preLists []
+    where preLists x ys zs = (x:ys) ++ zs
+
+inorderT = foldT inLists []
+    where inLists x ys zs = ys ++ [x] ++ zs
+
+postorderT = foldT postLists []
+    where postLists x ys zs = ys ++ zs ++ [x]    
+
+-- how does this work?
+tr1 = list2T [1..10]             -- example tree
+ex735a = preorderT  tr1          -- gives list in reverse order
+ex735b = inorderT   tr1          -- gives list in order
+ex735c = postorderT tr1          -- gives list in order
+
+{-
+    Exercise 7.36
+    
+    An ordered tree is a tree with information at the nodes
+    given in such manner that the item at a node must be bigger
+    than all items in the left subtree and smaller than all items
+    in the right subtree. A tree is ordered iff the list resulting
+    from its inorder traversal is ordered and contains no
+    duplicates. Give an implementation of this check.
+    
+-}
+isInOrder :: Ord a => Tr a -> Bool
+isInOrder tree = let lst = inorderT tree
+                 in  lst == (nub $ sort lst)
+                 
+-- provided solution
+orderedT :: Ord a => Tr a -> Bool
+orderedT tree = ordered (inorderT tree)
+    where
+        ordered xs = (sort (nub xs) == xs)        
+
+{-
+    Exercise 7.37
+    
+    An ordered tree (Exercise 7.36) can be used as a dictionary
+    by putting items of type (String, String) at the internal
+    nodes, and defining the ordering as:
+    
+        (v,w) <= (v',w') iff v <= v'
+        
+    Give the code for looking up a word definition in a 
+    dictionary (data type defined below).
+
+-}        
+type Dict = Tr (String, String)
+
+lookupD :: String -> Dict -> [String]
+lookupD key Nil = []
+lookupD key (T (k,d) t1 t2)
+    | key == k  = [d]
+    | key <= k  = lookupD key t1
+    | otherwise = lookupD key t2
+    
+{-
+    Exercise 7.38
+    
+    For efficient search in an ordered tree, it is crucial that
+    the tree is balanced: the left and right subtrees should 
+    have nearly the same depth and should themselves be balanced.
+    
+    The auxiliary function 'split' (given below) splits a
+    non-empty list into roughly equal lengths. Use this to
+    implement a function 
+    
+        buildTree :: [a] -> Tr a
+        
+    for transforming an ordered list into an ordered and
+    balanced binary tree.
+
+-}    
+split :: [a] -> ([a],a,[a])
+split xs = (ys1, y, ys2)
+    where
+        ys1     = take n xs
+        (y:ys2) = drop n xs
+        n       = length xs `div` 2
+
+-- provided solution        
+buildTree :: [a] -> Tr a
+buildTree [] = Nil
+buildTree xs = T m (buildTree left) (buildTree right)
+    where (left,m,right) = split xs
+
+{-
+    Following are definitions for a binary leaf tree (binary
+    trees with information at the leaf nodes rather than
+    the internal nodes)
+-}    
+data LeafTree a = Leaf a
+                | Node (LeafTree a) (LeafTree a)
+    deriving Show
+    
+-- an eample leaf tree
+ltree :: LeafTree String
+ltree = Node
+          (Leaf "I")
+          (Node 
+            (Leaf "love")
+            (Leaf "you"))
+            
+{-
+    Exercise 7.39
+    
+    Repeat exercise 7.33 for leaf trees. Call the new map
+    function mapLT.
+-}   
+mapLT :: (a -> b) -> LeafTree a -> LeafTree b
+mapLT f (Leaf x)     = (Leaf (f x))
+mapLT f (Node t1 t2) = Node (mapLT f t1) (mapLT f t2)
+
+{-
+    Exercise 7.40
+    
+    Give code for mirroring a leaf tree on its vertical axis.
+    Call the function 'reflect'. In the mirroring process,
+    the left- and right branches are swapped, and the same
+    swap takes place recursively within the branches.
+    The reflection of
+        Node (Leaf 1) (Node (Leaf 2) (Leaf 3))
+    is
+        Node (Node (Leaf 3) (Leaf 2)) (Leaf 1)
+-}        
+lt1 = Node (Leaf 1) (Node (Leaf 2) (Leaf 3))
+lt2 = Node (Node (Leaf 3) (Leaf 2)) (Leaf 1)
+
+reflect :: LeafTree a -> LeafTree a
+reflect (Leaf x)     = Leaf x
+reflect (Node t1 t2) = Node (reflect t2) (reflect t1)
+   
+{-
+    A data type for trees with arbitrary numbers of branches
+    (rose tree), with information of type a at the buds is
+    given below along with an example rose
+
+-}   
+data Rose a = Bud a | Br [Rose a] deriving (Eq, Show)
+
+rose = Br [Bud 1, 
+           Br [Bud 2, Bud 3,
+               Br [Bud 4, Bud 5, Bud 6]]]
+               
+{-
+    Exercise 7.42
+    
+    Write a function 
+        mapR :: (a -> b) -> Rose a -> Rose b
+    
+    that does for rose trees what map does for lists. For the
+    example rose, we should get:
+    
+        mapR succ rose
+            Br [Bud 2, Br [Bud 3, Bud 4, Br [Bud 5, Bud 6, Bud 7]]]
+-}             
+-- provided solution 
+mapR :: (a -> b) -> Rose a -> Rose b
+mapR f (Bud a)    = Bud (f a)
+mapR f (Br roses) = Br (map (mapR f) roses)
+
+
+        
