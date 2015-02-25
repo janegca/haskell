@@ -864,5 +864,490 @@ mapR :: (a -> b) -> Rose a -> Rose b
 mapR f (Bud a)    = Bud (f a)
 mapR f (Br roses) = Br (map (mapR f) roses)
 
-
+{-
+    7.5 Induction and Recursion over Lists
+    --------------------------------------
+    Induction and recursion over lists is based on two cases: [], (x:xs)
+    
+    A general scheme for structural recursion over lists (without
+    extra parameters) is:
+            f []    := z
+            f(x:xs) := h x (f xs)
+            
+    For example, the function 's' computes the sum of a list of 
+    numbers is defined by:
+    
+                       s [] := 0
+                    s(n:xs) := n +  s xs
+    
+        where the zero is taken for 'z' and '+' for 'h'
         
+    This general case is defined by as 'foldr' in Haskell.
+    
+        foldr : (a -> b -> b) -> b -> [a] -> b
+        foldr f z []     = z
+        foldr f z (x:xs) = f x (foldr f z xs)
+        
+        where, in general, 'z' is the identity element of the
+               operation (eg '0' for addition, '1' for multiplication, etc)
+               
+    Informally, the definition of 'foldr' is
+    
+        foldr (op) z [x1,x2,...,xn] := x1 op(x2 op(...(xn op z)...))
+        
+    We can redefine the functions for Natural numbers using 'foldr'
+    
+-}
+-- example of predefined recursive operations over lists
+len :: [a] -> Int                   -- length in Prelude
+len []     = 0                      -- base case
+len (x:xs) = 1 + len xs             -- recursive case
+     
+cat :: [a] -> [a] -> [a]            -- (++) in Prelude
+cat [] ys     = ys                  -- base case
+cat (x:xs) ys = x : (cat xs ys)     -- recursive case
+
+-- Natural number operations defined using 'foldr'
+add :: [Natural] -> Natural
+add = foldr plus Z
+
+mlt :: [Natural] -> Natural
+mlt = foldr mult (S Z)
+
+-- an alternative length definition for natural numbers
+-- returns the list length as a Natural number
+ln :: [a] -> Natural
+ln = foldr (\ _ n -> S n) Z
+
+{-
+    Exercise 7.46
+    
+    Use foldr to give a new implementation of generalized
+    union and foldr1 to give a new implementation of 
+    generalized intersection for lists (Look up the code for
+    foldr1 in the Haskell prelude. Compare with exercise 4.53).
+    
+    Source code for 'foldr1' from Prelude:
+    
+        foldr1           :: (a -> a -> a) -> [a] -> a
+        foldr1 _ [x]     =  x
+        foldr1 f (x:xs)  =  f x (foldr1 f xs)
+        foldr1 _ []      =  errorEmptyList "foldr1"    
+        
+    Code from Ex 4.53
+    
+        genUnion :: Eq a => [[a]] -> [a]
+        genUnion []       = []
+        genUnion [xs]     = xs
+        genUnion (xs:xss) = union xs  (genUnion xss)
+
+        genIntersect :: Eq a => [[a]] -> [a]
+        genIntersect []       = error "list of lists should be non-empty"
+        genIntersect [xs]     = xs
+        genIntersect (xs:xss) = intersect xs (genIntersect xss)    
+-}
+
+-- provided solutions
+genUnion :: Eq a => [[a]] -> [a]
+genUnion = foldr union []
+
+genIntersect :: Eq a => [[a]] -> [a]
+genIntersect = foldr1 intersect
+
+{- 
+    Consider the following are definitions of generalized conjunction and 
+    disjunction
+    
+        or :: [Bool] -> Bool
+        or []     = False
+        or (x:xs) = x || or xs
+
+        and :: [Bool] -> Bool
+        and []     = True
+        and (x:xs) = x && and xs
+        
+    To generalize these functions using 'foldr' we only need to
+    know the identity function for 'or' (True) and 'and' (False)
+    and so the defintions in Prelude.hs are
+    
+        and, or :: [Bool] -> Bool
+        and = foldr (&&) True
+        or  = foldr (||) False
+-}
+
+{-
+    Exercise 7.47
+    
+    Define a function, srt, that sorts a list of items in class
+    Ord a by folding the list with a function insrt.
+-}
+srt :: Ord a => [a] -> [a]
+srt = foldr insrt []
+    where
+        insrt :: Ord a => a -> [a] -> [a]
+        insrt x [] = [x]
+        insrt x (y:ys) | x < y = x : y : ys
+                       | otherwise = y : insrt x ys
+{-
+    foldl
+        where 'foldr' folds from the right, 'foldl' folds from 
+        the left
+        
+            foldl :: (a -> b -> a) -> a -> [b] -> a
+            foldl f z []     = z
+            foldl f z (x:xs) = foldl f (f z x) xs
+            
+    An informal defintion of foldl is
+    
+        foldl (op) z [x1,x2,...,xn] := (...((z op x1)opx2)op...)op xn
+        
+    Which can be used to pick out the following recursio theme
+    
+                f z []     :=  z
+                f z (x:xs) := f (h z x) xs
+
+    which boils down to recursion over lists with an extra
+    parameter
+                     r zs [] := zs
+                 r zs (x:xs) := r (prefix xs x) xs
+                 
+            where 'prefix' is given by prefix ys y = y:ys
+            
+    Example using 'rev' (below)
+    
+            rev [1,2,3]
+         -> foldl (\ xs x -> x:xs) [] [1,2,3]
+         -> foldl (\ xs x -> x:xs) ((\ xs x -> x:xs) [] 1)[2,3]
+         -> foldl (\ xs x -> x:xs) [1] [2,3]
+         -> foldl (\ xs x -> x:xs) ((\ xs x -> x:xs) [] 2) [3]
+         -> foldl (\ xs x -> x:xs) [2,1] [3]
+         -> foldl (\ xs x -> x:xs) ((\ xs x -> x:xs) [] 3) []
+         -> foldl (\ xs x -> x:xs) [3,2,1] []
+         -> [3,2,1]
+         
+    A 'foldr' version would be less efficient as it would require
+    an additional (++) operation (see rev' below) which is also
+    recursive. Assuming 'postfix' = (\ x xs -> xs ++ [x]), a
+    walkthrough of reverse using 'foldr' would look like the
+    following
+    
+            rev' [1,2,3]
+         -> foldr postfix [] [1,2,3]
+         -> postfix 1 (foldr postfix [] [2,3])
+         -> (foldr postfix [] [2,3]) ++ [1]
+         -> (postfix 2 (foldr postfix [] [3])) ++ [1]
+         -> (foldr postfix [] [3]) ++ [2] ++ [1]
+         -> (postfix 3 (foldr postfix [] [])) ++ [2] ++ [1]
+         -> (foldr postfix [] []) ++ [3] ++ [2] ++ [2]
+         -> [] ++ [3] ++ [2] ++ [1]
+         -> ([3] ++ [2]) ++ [1]
+         -> 3 : ([] ++ [2] [1]
+         -> [3,2] ++ [1]
+         -> 3 : ([2] ++ [1])
+         -> 3 : 2 : ([] ++ [1])
+         -> [3,2,1]
+    
+    It's easy to see the two folding operations h and h' are 
+    similar
+    
+               f [] := z                       f' [] := z
+            f(x:xs) := h x (f xs)           f'(x:xs) := h' (f' xs) x
+            
+    In the examples above
+        postfix x [] = [] ++ [x] = [x] = prefix [] x
+        
+    and
+        postfix x (prefix xs y) 
+      = (prefix x y) ++ [x]
+      = y:(xs + [x])
+      = y:(postfix x xs)
+      = prefix (postfix x xs) y
+                    
+                
+-}
+-- reverse in terms of 'foldl'
+rev :: [a] -> [a]
+rev = foldl (\ xs x -> x:xs) []
+
+-- less efficient reverse in terms of 'foldr'
+rev' :: [a] -> [a]
+rev' = foldr (\ x xs -> xs ++ [x]) []
+
+{-
+    Exercise 7.50
+    
+    Consider the version of reverse below. Which version is
+    more efficient, the original rev, the version rev' or
+    this one? Why?
+    
+    Ans: rev and rev2 have the same efficiency; same operation
+         and both are better than rev'
+
+-}
+rev1 :: [a] -> [a]
+rev1 xs = rev2 xs []
+    where
+        rev2 []     ys = ys
+        rev2 (x:xs) ys = rev2 xs (x:ys)
+        
+{-
+    Exercise 7.51
+    
+    Define an alternative version of ln using foldl.
+-} 
+-- provided solution
+{-
+        ln' [n1,n2]
+     -> ln' [S Z, S(S Z)]
+     -> foldl (\ n _ -> S n) Z [S Z, S(S Z)]
+     -> foldl (\ n _ -> S n) ((\ n _ -> S n) Z S Z) [S(S Z)]
+     -> foldl (\ n _ -> S n) (S Z) [S(S Z)]
+     -> foldl (\ n _ -> S n) ((\ n _ -> S n) (S Z) S(S Z)) []
+     -> foldl (\ n _ -> S n) S(S Z) []
+     -> S(S Z)
+-}
+ln' :: [a] -> Natural
+ln' = foldl (\ n _ -> S n) Z
+
+{-
+    The list operations, map and filter, can be combined
+    
+    exFilterMap below produces [5,6,7,8,9,10,11]
+    exMapFilter produces [6,7,8,9,10,11]
+    
+    because in the first example, the filter is applied 'after'
+    the mapping:
+           filter (>4) (map (+1) [1,2,3,4,5,6,7,8,9,10])
+        -> filter (>4) [2,3,4,5,6,7,8,9,10,11]
+        -> [5,6,7,8,9,10,11]
+        
+    while in the second example, the filter is applied 'before'
+    the mapping:
+           map (+1) (filter (>4) [1,2,3,4,5,6,7,8,9,10])
+        -> map (+1) [5,6,7,8,9,10]
+        -> [6,7,8,9,10,11]
+    
+    the third example corrects the filtering in the second
+    example, adding 1 to the number and then checking if it's
+    greater than 4
+            map (+1) (filter ((>4) . (+1)) [1..10])
+         -> map (+1) [4,5,6,7,8,9,10]
+         -> [5,6,7,8,9,10,11]
+         
+    The composition ((>4) . (+1)) is equivalent to (>3)
+    showing
+    
+        filter p (map f xs) = map f (filter (p . f) xs)
+    
+-}
+exFilterMap  = filter (>4) (map (+1) [1..10])
+exMapFilter  = map (+1) (filter (>4) [1..10])
+exMapFiltera = map (+1) (filter ((>4) . (+1)) [1..10])
+
+{-
+    7.6 Variations on the Tower of Hanoi
+    -----------------------------------
+    Basic Tower of Hanoi
+        3 pegs, 8 discs stacked in descending size on the 1st peg
+        Object is to transfer the stack to the 2nd peg while
+        keeping to the following rules:
+            1. move only one disc at a time
+            2. never place a larger disc on top of a smaller one
+            
+        The least number of moves is 2^n - 1, with 8 disks
+        that's 2^8 - 1 = 255 moves.
+        
+    An obvious way to represent the configuration is:
+        ([1,2,3,4,5,6,7,8],[],[])
+    with the pegs named A, B and C
+    
+    There are six possible moves from one peg to another.
+    
+    We can write a 'transfer' operation to move the disks
+    creating a new configuration
+
+-}
+data Peg = A | B | C
+type Tower = ([Int],[Int],[Int])
+
+move :: Peg -> Peg -> Tower -> Tower
+move A B (x:xs,   ys,   zs) = (  xs, x:ys,   zs)
+move B A (  xs, y:ys,   zs) = (y:xs,   ys,   zs)
+move A C (x:xs,   ys,   zs) = (  xs,   ys, x:zs)
+move C A (  xs,   ys, z:zs) = (z:xs,   ys,   zs)
+move B C (  xs, y:ys,   zs) = (  xs,   ys, y:zs)
+move C B (  xs,   ys, z:zs) = (  xs, z:ys,   zs)
+
+transfer :: Peg -> Peg -> Peg -> Int -> Tower -> [Tower]
+transfer _ _ _ 0 tower = [tower]
+transfer p q r n tower = transfer p r q (n-1) tower
+                      ++ transfer r q p (n-1) (move p q tower')
+    where tower' = last (transfer p r q (n-1) tower)
+    
+hanoi :: Int -> [Tower]
+hanoi n = transfer A B C n ([1..n], [], [])
+
+{-
+    Not every move in the above is correct; there are 3^n ways
+    to stack n disks of decreasing size on 3 pegs so that no
+    disk is put on a smaller disk. We can implement a procedure
+    to only make valid moves
+-}
+check :: Int -> Tower -> Bool
+check 0 t = t == ([],[],[])
+check n (xs, ys, zs)
+    | xs /= [] && last xs == n = check (n-1) (init xs, zs, ys)
+    | zs /= [] && last zs == n = check (n-1) (ys, xs, init xs)
+    | otherwise                = False
+    
+-- find the largest disk in the configuration
+maxT :: Tower -> Int
+maxT (xs, ys, zs) = foldr max 0 (xs ++ ys ++ zs)
+
+-- check a configuration of any size
+checkT :: Tower -> Bool
+checkT t = check (maxT t) t
+
+    
+-- in the end, only two types of moves can be made,
+-- move the smallest disk or move a disk other than the smallest    
+parity :: Tower -> (Int, Int, Int)
+parity (xs,ys,zs) = par (xs ++ [n+1], ys ++ [n], zs ++ [n+1])
+    where 
+        n                      = maxT (xs, ys, zs)
+        par (x:xs, y:ys, z:zs) = (mod x 2, mod y 2, mod z 2)
+
+target :: Tower -> Peg
+target t@(xs,ys,zs) | parity t == (0,1,1) = A
+                    | parity t == (1,0,1) = B
+                    | parity t == (1,1,0) = C
+                    
+move1 :: Tower -> Tower
+move1 t@(1:_,  ys,  zs) = move A (target t) t
+move1 t@( xs, 1:_,  zs) = move B (target t) t
+move1 t@( xs,  ys, 1:_) = move C (target t) t        
+
+-- moving the middle disk
+move2 :: Tower -> Tower
+move2 t@(1:xs,  [],   zs) = move C B t
+move2 t@(1:xs,  ys,   []) = move B C t
+move2 t@(1:xs,  ys,   zs) = if ys < zs 
+                            then move B C t else move C B t
+move2 t@(  [],1:ys,   zs) = move C A t
+move2 t@(  xs,1:ys,   []) = move A C t
+move2 t@(  xs,1:ys,   zs) = if xs < zs
+                            then move A C t else move C A t
+move2 t@(  [],  ys, 1:zs) = move B A t
+move2 t@(  xs,  [], 1:zs) = move A B t
+move2 t@(  xs,  ys, 1:zs) = if xs < ys 
+                            then move A B t else move B A t
+
+-- check for completion
+done :: Tower -> Bool
+done ([],[],_)  = True
+done (xs,ys,zs) = False    
+
+-- transfers occurring by alternating between move1 and move2
+-- as the last move must be a move1 we only need to check if
+-- we're done after a move1  
+transfer1, transfer2 :: Tower -> [Tower]
+transfer1 t = t : transfer2 (move1 t)
+transfer2 t = if done t 
+              then [t] else t : transfer1 (move2 t)
+
+-- new Hanoi procedure
+hanoi' :: Int -> [Tower]
+hanoi' n = transfer1 ([1..n],[],[])
+
+-- can now call hanoi' 64 without running into a memory problems
+-- still takes an eternity
+zazen :: [Tower]
+zazen = hanoi' 64
+
+{- 
+    Exercise 7.61
+    
+    Define and implement a total ordering on the list of all
+    the correct configurations.
+
+-}
+-- provided solution
+compareT :: Tower -> Tower -> [Ordering]
+compareT t t' 
+    | maxT t < maxT t' = [ LT | checkT t && checkT t' ]
+    | maxT t > maxT t' = [ GT | checkT t && checkT t' ]
+    | otherwise        = [ compare' t t' | checkT t && checkT t' ]
+    
+compare' :: Tower -> Tower -> Ordering
+compare' ([],[],[]) ([],[],[]) = EQ
+compare' t@(xs,ys,zs) t'@(xs',ys',zs')
+    | firstStage t && firstStage t' =
+        compare' (init xs, zs, ys) (init xs', zs', ys')
+    | lastStage t && lastStage t' =
+        compare' (ys, xs, init zs) (ys', xs', init zs')
+    | firstStage t && lastStage t' = LT
+    | lastStage t && firstStage t' = GT
+    where
+        firstStage (xs,ys,zs) = xs /= [] && last xs == maxT t
+        lastStage t = not (firstStage t)    
+              
+-- find the k-th configuration
+hanoiCount :: Int -> Integer -> Tower
+hanoiCount n k 
+    | k < 0         = error "argument negative"
+    | k > 2^n - 1   = error "argument not in range"
+    | k == 0        = ([1..n], [], [])
+    | k == 2^n - 1  = ([], [], [1..n])
+    | k < 2^(n-1)   = (xs ++ [n], zs, ys)
+    | k >= 2^(n-1)  = (ys', xs', zs' ++ [n])
+    where
+        (xs,ys,zs) = hanoiCount (n-1) k
+        (xs',ys',zs') = hanoiCount (n-1) (k - 2^(n-1))
+        
+-- form a bijection between the natural numbers and the
+-- correct tower configurations
+toTower :: Integer -> Tower
+toTower n = hanoiCount k m
+    where
+        n' = fromInteger (n+1)
+        k  = truncate (logBase 2 n')
+        m  = truncate (n' - 2^k)
+  
+{-
+    Exercise 7.61
+    
+    The function hanoiCount gives us yet another approach to the 
+    tower transfer problem. Implement this as hanoi''::Int->[Tower]
+-}
+-- provided solution
+hanoi'' :: Int -> [Tower]
+hanoi'' n = [ hanoiCount n k | k <- [0..2^(toInteger n)-1] ]
+        
+{-
+    Exercise 7.62
+    
+    Implement the function fromTower :: Tower -> Integer
+    that is the inverse of toTower
+    
+    Provided Answer:
+    
+    The key to the implementation is the observation that the initial 
+    configuration of a tower with disk size n is preceded in the 
+    ordering of all tower configurations by 2n−1 configurations for 
+    towers of smaller sizes, as is easily proved by induction.
+-}        
+fromTower :: Tower -> Integer
+fromTower t = (2^n - 1) + (fromT t n) 
+    where
+        n = maxT t
+        fromT (xs,ys,zs) k
+            | xs == [1..k] = 0
+            | elem k xs    = fromT (init xs, zs, ys) (k-1)
+            | elem k zs    = 2^(k-1) + fromT (ys, xs, init zs) (k-1)
+        
+{-
+    7.7 Other Data Structures
+    -------------------------
+    
+    
+-}
