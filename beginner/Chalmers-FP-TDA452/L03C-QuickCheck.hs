@@ -1,12 +1,7 @@
--- Notes from Chalmers 2014 TDA452 Functional Programming Course
--- Week 3
--- Source:
---   http://www.cse.chalmers.se/edu/year/2014/course/
---        TDA452_Functional_Programming
-
-module L03C where
-
--- using QuickCheck
+{-
+    there's overlap here with L03B-TestGenerators
+-}
+-- using QuickCheck to test custom types
 import Test.QuickCheck --hiding (OrderedList, Ordered)
 
 {-
