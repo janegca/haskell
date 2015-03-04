@@ -399,6 +399,325 @@ ex1div983 = decForm (1 % 983)
 {-
     8.7 Irrational Numbers
     ----------------------
+    Irrational numbers, like the square root of 2, cannot be represented
+    by rational fractions; instead, scientific notation is used. For
+    example, the square root of 2 is represented as:
+            1.41421e+06
+    with the decimal portion, 1.41421, called the 'mantissa' and
+    the remaining portion, 06, the 'exponent'.  Such numbers are
+    represented, in computing, as Float's (single precision) or
+    Double's (double precision).
     
+    Floating point numbers are stored as pairs (m,n) where m is the
+    mantissa (significand) and n is the exponent.
+    
+    Haskell has a number of functions for working with floating
+    point values.
+-}
+ex871  = floatRadix (sqrt 2)     -- returns the base of a number
+ex872  = decodeFloat (sqrt 2)    -- returns mantissa and exponent
+ex872a = fromIntegral (fst ex872) 
+       * (fromIntegral ex871)^^(snd ex872)   -- reconstruct number
+ex872b = encodeFloat (fst ex872) (snd ex872) -- reconstruct number
+ex873  = floatDigits (sqrt 2)  -- # of digits in the mantissa
+ 
+ex874  = scaleFloat 4 (sqrt 2)
+ex874a = ex874 == 2^4 * sqrt 2 
+ 
+ex875   = significand (sqrt 2)  -- mantissa scaled to between (-1,1)
+ex875a  = exponent (sqrt 2)     -- scaled exponent
+ex875b  = ex875 * 2^ex875a == scaleFloat ex875a ex875
+
+{-
+
+    *Main> ex871
+    2
+    *Main> ex872
+    (6369051672525773,-52)
+    *Main> ex872a
+    1.4142135623730951
+    *Main> ex872b
+    1.4142135623730951
+    *Main> ex873
+    53
+    *Main> ex874
+    22.627416997969522
+    *Main> ex874a
+    True
+    *Main> ex875
+    0.7071067811865476
+    *Main> ex875a
+    1
+    *Main> ex875b
+    True
+    *Main>     
+
+-}
+{-
+    8.8 The Mechanic's Rule
+    -----------------------
+    Sequences of fractions can be used find approximations to
+    real numbers that are, themselves, NOT fractions. A well
+    known algorithm for generating such sequences is 'The
+    Mechanic's Rule' (also called Newton's method).
+    
+    The two functions defined below use the Predlude functions:
+        recip   takes the reciprocal of a fraction
+        iterate applies the function to the result of the previous
+                application
+-}
+mechanicsRule :: Rational -> Rational -> Rational
+mechanicsRule p x = (1 % 2) * (x + (p * (recip x)))
+
+mechanics :: Rational -> Rational -> [Rational]
+mechanics p x = iterate (mechanicsRule p) x
+
+sqrtM :: Rational -> [Rational]
+sqrtM p | p < 0    = error "negative argument"
+        | otherwise = mechanics p s
+    where
+        s  = if xs == [] then 1 else last xs
+        xs = takeWhile (\ m -> m^2 <= p) [1..]
+        
+-- following examples demonstrate that the algorithm 
+-- converges very fast        
+ex881  = take 5 (sqrtM 2)
+ex881a = fromRational (last ex881)
+ex881b = sqrt 2
+      
+ex882  = take 7 (sqrtM 4)
+ex882a = fromRational (last ex882)
+ex882b = sqrt 4
+
+ex883  = take 5 (sqrtM 50)
+ex883a = fromRational (ex883 !! 3)      -- 4th step
+ex883b = fromRational (last ex883)      -- 5th step
+ex883c = sqrt 50                        
+
+{-
+
+        *Main> ex881
+        [1 % 1,3 % 2,17 % 12,577 % 408,665857 % 470832]
+        *Main> ex881a
+        1.4142135623746899
+        *Main> ex881b
+        1.4142135623730951
+        *Main> 
+        *Main> ex882
+        [2 % 1,2 % 1,2 % 1,2 % 1,2 % 1,2 % 1,2 % 1]
+        *Main> ex882a
+        2.0
+        *Main> ex882b
+        2.0
+        *Main> 
+        *Main> ex883
+        [7 % 1,99 % 14,19601 % 2772,768398401 % 108667944,1180872205318713601 % 167000548819115088]
+        *Main> ex883a
+        7.0710678118654755
+        *Main> ex883b
+        7.0710678118654755
+        *Main> ex883c
+        7.0710678118654755
+        *Main> 
+
+-}      
+       
+{-  8.9 Reasoning about Reals    
+    -------------------------
+    [Note: text briefly discusses continuous functions and limits
+           and applies the ideas to sequences of Real numbers]
+    
+    We can set our tolerance level, or how accurate we need the
+    approximation of a real value to be, using an 'epsilon' value
+    The following functions use this approach to computing square
+    roots.
 -}
 
+approximate :: Rational -> [Rational] -> Rational
+approximate eps (x:y:zs) | abs (y-x) < eps = y
+                         | otherwise       = approximate eps (y:zs)
+
+apprx :: [Rational] -> Rational
+apprx = approximate (1/10^6)
+
+mySqrt :: Rational -> Rational
+mySqrt p = apprx (sqrtM p)
+
+ex891 = (fromRational (mySqrt 2), sqrt 2)
+ex892 = (fromRational (mySqrt 7), sqrt 7)
+ex893 = (fromRational (mySqrt 50), sqrt 50)
+
+{-
+
+    *Main> ex891
+    (1.4142135623730951,1.4142135623730951)
+    *Main> ex892
+    (2.6457513110646933,2.6457513110645907)
+    *Main> ex893
+    (7.0710678118654755,7.0710678118654755)
+    *Main> 
+
+-}
+                        
+{- 
+    8.10 Complex Numbers
+    --------------------
+    In the realm of real numbers we cannot solve the equation
+            
+            x^2 + 1 = 0 -> x^2 = -1 -> x = sqrt -1
+    
+    because the square root of -1 does not exist (is undefined)
+    in the realm of real numbers.
+    
+    As a result, the number domain was extended to that of
+    'complex numbers' which introduces an entity, i, the
+    imaginary unit, with the value i^2 = -1.  Complex numbers,
+    thus, have 'real' and 'imaginary' components:
+    
+            x + iy 
+            
+        where x and y are arbitrary real numbers
+              'x'  is the 'real' part and
+              'iy' is the imaginary part
+              
+    And
+    
+        (x + iy) + (u + iw) = (x + u) + i(y + w)
+        (x + iy) - (u + iw) = (x+iy) + (-u + -iw) = (x - u)+ i(y-w)
+        
+        (x + iy)(u + iw) = xu + iyu + ixw + i^2yw   
+                         = xu + iyu + ixw + (-1)yw
+                         = xu + i(yu + xw) - yw
+                         = (xu - yw) + i(yu + xw)
+                         
+        x + iy    x + iy   u - iw   xu  + yw      yu  - xw
+        ------ =  ------ x ------ = --------- + i ---------
+        u + iw    u + iw   u - iw   u^2 + w^2     u^2 + w^2
+                
+    
+    There is a standard module, Complex.hs, in Haskell that
+    implements complex numbers.  
+    
+    The complex number z = x + iy can be represented geometrically 
+    in two ways
+    
+    1. Associate 'z' with the point coordiantes (x,y) in the
+       plane R^2. R^2 is then the 'complex plane'
+       
+    2. Associate 'z' with the 2-dimensional vector with components
+       x and y. Think of this as a free vector i.e. a vector that
+       can be moved around freely as long as it does not change
+       direction.
+    
+    The two representations can be combined by attaching the
+    vector z to the origin of the plane.
+    
+  
+                              iy
+                                |    z = (x + iy)
+                                |  /
+                                | /
+                                |/
+                   -1  ---------o----------- 1 --> x
+                                |\  
+                                | \
+                                |  \
+                                |   z' = (x - iy)
+                               -i
+    The horizontal axis, through the origin, (x-axis) is the 'real
+    axis'. The vertical axis through the origin (y-axis) is the
+    'imaginary axis'.
+    
+    The 'conjugate' of the vector z is z' (normally shown as a z
+    topped with a overscore); it is the reflection of z.
+    
+    The 'magnitude' (modulus or absolute value) of the complex
+    number 'z' is the length r of the z vector. Notated as |z|
+    The magnitude of z = x + iy is the square root of x^2+y^2.
+   
+    The 'phase' or 'argument' of a complex number 'z' is the angle
+    theta of the vector z. The phase theta of a vector of magnitude 1
+    is given by the vector cos(theta) + i sin(theta), so the phase
+    of z = x + iy is given by atan(y/x) for x > 0 and atan(y/x)+pi
+    for x < 0. If x = 0 then phase is 0.  The Haskell phase function
+    uses atan2 to return the value in the correct quadrant.
+    
+    The polar representation of a complex number z = x + iy is
+    r angle theta where r = |z| and theta = arg(z) [phase z]. To
+    get back to the vector sum, use mkPolar.
+    
+    Use 'cis' to convert a phase theta to a vector in the unit
+    circle.
+ 
+    In the complex plane, positive real numbers have phase 0 or
+    2k*pi while negative real numbers have phase pi or (2k + 1)pi.
+    Multiplying two negative real numbers means multiplying
+    their values and adding their phases, so we get phase 2pi which
+    is the same as phase 0, modulo 2k*pi
+ 
+    A complex number, in Haskell, is written as:
+    
+                (x :+ y)
+-}
+z :: Complex Double
+z      = 9 :+ 3
+
+theta :: Double
+theta = 30.0
+
+ex8101 = realPart  z
+ex8102 = imagPart  z
+ex8103 = conjugate z
+ex8104 = magnitude z
+ex8105 = phase     z
+ex8106 = polar     z
+ex8107 = mkPolar (fst ex8106) (snd ex8106)
+ex8108 = cis theta
+
+{-
+    *Main> z
+    9.0 :+ 3.0                                  -- complex number
+    *Main> ex8101
+    9.0                                         -- real part
+    *Main> ex8102
+    3.0                                         -- imaginary part
+    *Main> ex8103
+    9.0 :+ (-3.0)                               -- conjugate
+    *Main> ex8104
+    9.486832980505138                           -- magnitude
+    *Main> ex8105
+    0.3217505543966422                          -- phase
+    *Main> ex8106
+    (9.486832980505138,0.3217505543966422)      -- polar
+    *Main> ex8107
+    9.0 :+ 3.0                                  -- mkPolar
+    *Main> ex8108
+    0.15425144988758405 :+ (-0.9880316240928618)    -- cis 30.0
+    *Main> 
+
+-}
+
+-- solve a quadratic equation
+solveQ :: (Complex Float, Complex Float, Complex Float)
+       -> (Complex Float, Complex Float)
+solveQ = \ (a,b,c) -> if a == 0 
+                      then error "not quadratic"
+                      else let d = b^2 - 4 * a * c
+                           in ((- b + sqrt d) / 2 * a,
+                               (- b - sqrt d) / 2 * a)
+                               
+ex8109  = solveQ (1, 0, -1)
+ex8109a = solveQ (1, 0,  1)                               
+ex8109b = solveQ (1, 0, -2)
+ex8109c = solveQ (1, 0,  2)
+{-
+    *Main> ex8109
+    (1.0 :+ 0.0,(-1.0) :+ 0.0)
+    *Main> ex8109a
+    (0.0 :+ 1.0,0.0 :+ (-1.0))
+    *Main> ex8109b
+    (1.4142135 :+ 0.0,(-1.4142135) :+ 0.0)
+    *Main> ex8109c
+    (0.0 :+ 1.4142135,0.0 :+ (-1.4142135))
+    *Main> 
+-}
