@@ -114,5 +114,109 @@ insert msg@(LogMessage _ ts _) (Node t1 m@(LogMessage _ mts _) t2)
     | otherwise = Node t1 m (insert msg t2)
 insert _ t = t
     
-                          
+{-
+    Exercise 3 
 
+    Once we can insert a single LogMessage into a MessageTree,
+    we can build a complete MessageTree from a list of messages. 
+    Specifically, define a function
+    
+        build :: [LogMessage] -> MessageTree
+        
+    which builds up a MessageTree containing the messages in the list,
+    by successively inserting the messages into a MessageTree (beginning
+    with a Leaf).
+
+-}                          
+build :: [LogMessage] -> MessageTree
+build msgs = bld msgs Leaf
+    where
+        bld [] t     = t
+        bld (x:xs) t = bld xs (insert x t)
+   
+exBuild :: MessageTree   
+exBuild =  build (map parseMessage [msg1, msg2,msg3,msg4])
+
+{-
+    Exercise 4 
+
+    Finally, define the function
+
+        inOrder :: MessageTree -> [LogMessage]
+
+    which takes a sorted MessageTree and produces a list of all the
+    LogMessages it contains, sorted by timestamp from smallest to biggest.
+    (This is known as an in-order traversal of the MessageTree.)
+    
+    With these functions, we can now remove Unknown messages and
+    sort the well-formed messages using an expression such as:
+
+        inOrder (build tree)
+    
+    [Note: there are much better ways to sort a list; this is just an exercise
+    to get you working with recursive data structures!]
+
+-}       
+inOrder :: MessageTree -> [LogMessage]
+inOrder Leaf           = []
+inOrder (Node t1 m t2) = inOrder t1 ++ m : inOrder t2
+
+{-
+    Exercise 5 
+
+    Now that we can sort the log messages, the only thing
+    left to do is extract the relevant information. We have decided that
+    “relevant” means “errors with a severity of at least 50”.
+    
+    Write a function
+
+        whatWentWrong :: [LogMessage] -> [String]
+
+    which takes an unsorted list of LogMessages, and returns a list of the
+    messages corresponding to any errors with a severity of 50 or greater,
+    sorted by timestamp. (Of course, you can use your functions from the
+    previous exercises to do the sorting.)
+    
+    For example, suppose our log file looked like this:
+    
+        I 6 Completed armadillo processing
+        I 1 Nothing to report
+        E 99 10 Flange failed!
+        I 4 Everything normal
+        I 11 Initiating self-destruct sequence
+        E 70 3 Way too many pickles
+        E 65 8 Bad pickle-flange interaction detected
+        W 5 Flange is due for a check-up
+        I 7 Out for lunch, back in two time steps
+        E 20 2 Too many pickles
+        I 9 Back from lunch
+        
+        
+    This file is provided as sample.log. There are four errors, three of
+    which have a severity of greater than 50. The output of whatWentWrong
+    on sample.log ought to be
+
+        [ "Way too many pickles"
+        , "Bad pickle-flange interaction detected"
+        , "Flange failed!"
+        ]
+
+    You can test your whatWentWrong function with testWhatWentWrong,
+    which is also provided by the Log module. You should provide
+    testWhatWentWrong with your parse function, your whatWentWrong
+    function, and the name of the log file to parse.    
+
+-}
+whatWentWrong :: [LogMessage] -> [String]
+whatWentWrong []     = []
+whatWentWrong ((LogMessage (Error n) _ txt) : xs) | n > 50
+                     = txt : whatWentWrong xs
+whatWentWrong (_:xs) = whatWentWrong xs
+
+ex5test :: IO [String]
+ex5test = testWhatWentWrong parse whatWentWrong "sample.log"
+
+ex6 :: IO [String]
+ex6 = testWhatWentWrong parse whatWentWrong "error.log"
+
+    
