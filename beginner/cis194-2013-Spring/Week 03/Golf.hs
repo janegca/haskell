@@ -130,19 +130,24 @@ ex2test = ex2a && ex2b && ex2c
 histogram :: [Integer] -> String
 histogram lst =  concat (hs (sort lst)) ++ "\n==========\n0123456789\n"
     where
+        -- build output strings
         hs :: [Integer] -> [String]
         hs xs = map (pad 9) (rows (group xs)) 
+        
+        -- determine which elements appear in each output row
+        rows :: [[Integer]] -> [[[Integer]]]
+        rows xs  
+            | and (map null xs) = []
+            | otherwise         = rows (map (drop 1) xs) 
+                                    ++ [(map (take 1) xs)]        
                   
+        -- convert a row of elements into a formatted string          
         pad :: Integer -> [[Integer]] -> String
         pad n xss | n < 0       = "\n"
                   | elem n flat = pad (n-1) xss ++ "*"
                   | otherwise   = pad (n-1) xss ++ " "
             where flat = concat xss
             
-        rows :: [[Integer]] -> [[[Integer]]]
-        rows xs  
-            | and (map null xs) = []
-            | otherwise  = rows (map (drop 1) xs) ++ [(map (take 1) xs)]
       
 ex4a, ex4b :: IO ()      
 ex4a = putStr (histogram [1,1,1,5])
