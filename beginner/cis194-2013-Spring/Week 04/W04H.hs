@@ -9,6 +9,7 @@ module W04H where
         04-higher-order.pdf
 
 -}
+import Data.List ( (\\) )  -- list difference operator
 
 {-
     Exercise 1: Wholemeal programming
@@ -114,77 +115,171 @@ fun2' = sum . filter even . takeWhile (>1) . iterate g
     but it should result in balanced trees, with each subtree having a
     correct computed height.
         
+    Ref: https://stackoverflow.com/questions/16157203/
+              build-balanced-binary-tree-with-foldr
+              
+    Note: originally tried to build and 'ordered' balanced tree, which
+          wasn't required; trick was to use one subtree to measure the
+          overall height of the tree and to only increase the tree height
+          when adding a node when both subtrees are of equal height
 -}    
     
 data Tree a = Leaf
             | Node Integer (Tree a) a (Tree a)
     deriving (Show, Eq)
     
-foldTree :: Ord a => [a] -> Tree a
+foldTree :: [a] -> Tree a
 foldTree = foldr insert Leaf
 
--- Ref:  see Discrete Math, Chapter 11 AVL Trees
---
-insert :: Ord a => a -> Tree a -> Tree a
+insert :: a -> Tree a -> Tree a
 insert x Leaf = Node 0 Leaf x Leaf
-insert x tree@(Node h t1 d t2) =    
-    if x < d then
-        if (height newL) > (height t2) + 1
-        then rotR (Node h newL d t2)
-        else Node (h+1) newL d t2
-    else if x > d then
-        if (height newR) > (height t1) + 1
-        then rotL (Node h t1 d newR)
-        else Node (h+1) t1 d newR
-    else tree                                   -- no change to tree
-    where
-        newL = insert x t1
-        newR = insert x t2
-                
-height :: Tree a -> Integer
-height Leaf           = 0
-height (Node h _ _ _) = h
-   
--- balances a tree that is right-heavy (inside or out)   
-rotL :: Tree a -> Tree a   
-rotL tree@(Node h t1 d t2@(Node _ yL _ yR)) =
-    if (height yR) < (height yL)
-    then easyLeft (Node h t1 d (easyRight t2))
-    else easyLeft tree
-rotL tree = tree    
-
--- balances a tree that is left-heavy (inside or out)    
-rotR :: Tree a -> Tree a
-rotR tree@(Node h t1@(Node h1 xL _ xR) d t2) =
-    if (height xL) > (height xR)
-    then easyRight (Node h (easyLeft t1) d t2)
-    else easyRight tree
-rotR tree = tree    
-
--- re-balance an 'outer right heavy' tree    
-easyLeft :: Tree a -> Tree a
-easyLeft (Node h t1 d (Node h1 yL a yR)) =
-    Node h1 (Node (h1-1) t1 d yL) a yR
-easyLeft tree = tree
-
--- re-balance an 'outer left heavy' tree
-easyRight :: Tree a -> Tree a
-easyRight (Node h (Node h1 xL a xR) d t2) =
-    Node h1 xL a (Node (h1-1) xR d t2)
-easyRight tree = tree    
+insert x (Node n t1 d t2) 
+    | h1 < h2   = Node n (insert x t1) d t2
+    | h1 > h2   = Node n t1 d t2n            
+    | otherwise = Node (h + 1) t1 d t2n
+    where                
+        height :: Tree a -> Integer
+        height Leaf           = -1  -- if 0 no diff between Node with
+        height (Node s _ _ _) = s   -- with 2 leaves and a single Leaf
         
--- test inserts 
-
-ta, tb, tc, td, te, tf, tg :: Tree String
-ta = insert "A" Leaf
-tb = insert "B" ta
-tc = insert "C" tb
-td = insert "D" tc
-te = insert "E" td
-tf = insert "F" te
-tg = insert "G" tf
-   
--- TODO: HEIGHTS ARE MESSED UP SO BALANCING IS OFF   
+        h1  = height t1
+        h2  = height t2
+        t2n = insert x t2 -- use the right tree to measure overall height
+        h   = height t2n
+           
 testTree :: Tree Char
 testTree = foldTree "ABCDEFGHIJ"
+
+{-
+    Output of 'testTree'
     
+    Node 3 
+        (Node 2 (Node 0 Leaf 'C' Leaf) 
+             'H' 
+                (Node 1 Leaf 'F' (Node 0 Leaf 'B' Leaf)))
+        'J' 
+        (Node 2 (Node 1 Leaf 'E' (Node 0 Leaf 'A' Leaf)) 
+             'I' 
+                (Node 1 Leaf 'G' (Node 0 Leaf 'D' Leaf)))
+               
+               
+                        J          3
+                      /   \
+                     H     I       2
+                    / \   / \
+                   C   F  E  G     1
+                        \  \  \
+                        B   A  D   0
+    
+-}
+{-
+    Exercise 3 - More folds!
+
+    1.  Implement a function
+            xor :: [Bool] -> Bool
+        
+        which returns True if and only if there are an odd number of True
+        values contained in the input list. It does not matter how many
+        False values the input list contains. For example,
+
+            xor [False, True, False]              == True
+            xor [False, True, False, False, True] == False
+        
+        Your solution must be implemented using a fold.
+        
+    2.  Implement map as a fold. That is, complete the definition
+        
+            map’ :: (a -> b) -> [a] -> [b]
+            map’ f = foldr ...
+        
+        in such a way that map’ behaves identically to the standard map
+        function.        
+        
+    3. (Optional) Implement foldl using foldr. That is, complete the
+        definition
+        
+            myFoldl :: (a -> b -> a) -> a -> [b] -> a
+            myFoldl f base xs = foldr ...
+        
+        in such a way that myFoldl behaves identically to the standard
+        foldl function.
+        
+        Hint: Study how the application of foldr and foldl work out:
+        foldr f z [x1, x2, ..., xn] == x1 ‘f‘ (x2 ‘f‘ ... (xn ‘f‘ z)...)
+        foldl f z [x1, x2, ..., xn] == (...((z ‘f‘ x1) ‘f‘ x2) ‘f‘...) ‘f‘ xn        
+
+-}    
+-- Solution Ref: https://github.com/pdswan/cis194/blob/master/hw4/Hw4.hs
+xor :: [Bool] -> Bool
+xor = foldr (\x y -> if x then (not y) else y) False
+
+ex3a :: Bool
+ex3a =   xor [False, True, False]              == True
+     &&  xor [False, True, False, False, True] == False
+
+map' :: (a -> b) -> [a] -> [b]
+map' f = foldr (\x y -> f x : y) []
+     
+ex3b :: Bool
+ex3b =  m1 == m2
+    where
+        m1, m2 :: [Integer]
+        m1 = map' (+1) [1..5]
+        m2 = map  (+1) [1..5]
+        
+myFoldl :: (a -> b -> a) -> a -> [b] -> a
+myFoldl f base xs = foldr (nextStepFn f) id xs $ base
+    where
+        nextStepFn :: (a -> b -> a) -> b -> (a -> a) -> (a -> a)
+        nextStepFn iter item g = g . (flip iter item)
+   
+ex3c :: Bool   
+ex3c = fold == 5
+    where 
+        fold :: Integer
+        fold = myFoldl max 5 [1,2,3,4]       
+        
+{-
+
+    Exercise 4: Finding primes
+
+    Read about the Sieve of Sundaram. Implement the algorithm using 
+    function composition. Given an integer n, your function should
+    generate all the odd prime numbers up to 2n + 2.
+    
+        sieveSundaram :: Integer -> [Integer]
+        sieveSundaram = ...
+    
+    To give you some help, below is a function to compute the Cartesian
+    product of two lists. This is similar to zip, but it produces all
+    possible pairs instead of matching up the list elements. For example,
+    cartProd [1,2] [’a’,’b’] == [(1,’a’),(1,’b’),(2,’a’),(2,’b’)]
+    
+    It’s written using a list comprehension, which we haven’t talked about
+    in class (but feel free to research them).
+    
+        cartProd :: [a] -> [b] -> [(a, b)]
+        cartProd xs ys = [(x,y) | x <- xs, y <- ys]
+
+-}        
+-- this works but need to (a) use cartProd and (b) higher order
+-- functions 
+-- Ref: https://stackoverflow.com/questions/16246456/
+--              sieve-of-sundaram-list-comprehension
+--
+sieveSundaram :: Integer -> [Integer]
+sieveSundaram n =  [ 2*x+1 | x <- [1..n], not (elem x excl)]
+    where excl =  filter (< n) 
+                    [ i + j + 2 * i * j | i <- [1..n], j <- [i..n]]
+
+-- above re-written to use 'pipeline' of higher order functions                    
+sieveSundaram' :: Integer -> [Integer]
+sieveSundaram' n = map ((+1) . (*2)) -- values that satisfy the algo
+                  ([1..n] -- only check values that are
+                      \\  -- not in the list of values to exclude
+                      ( filter (<n) 
+                      . map (\(i,j) -> i + j + 2 * i * j) 
+                      $ cartProd [1..n] [1..n]))  -- (i,j) pairs                     
+                      
+cartProd :: [a] -> [b] -> [(a, b)]
+cartProd xs ys = [(x,y) | x <- xs, y <- ys]
