@@ -526,9 +526,319 @@ ex92j = map (p2fct [-12,-5,5,1]) [0..9]
 ex92k = solveSeq [3,7,17,39,79]     -- [3,3,0,1] -> n^3 + 3n + 3
 
 {-
-    Note: from solution to Exercise 9.6
+    Note: from provided solution to Exercise 9.6
     
     If you arrive at a solution by solving a set of linear equations
     derived from a polynomial sequence there is no need for an
     inductive proof as no guess work is involved.
 -}
+{-
+    9.3 Polynomials and the Binomial Theorem
+    ----------------------------------------
+    
+            n!          Gives the number of k-sized subsets that can
+        ---------       be chosen from a set of size n (order does
+        k! (n-k)!       not matter)
+    
+        Ex: n choose 0 = 1
+            n choose 1 = n
+            n choose 2 = n(n-1)/2
+            n choose 3 = n(n-1)(n-2)/6
+            
+    [Note: text has proofs for Newtons Binomial Theorem and the
+           following functions]
+            
+-}
+-- number of k-sized subsets that can be chosen from a set of size n
+choose n k = (product [n-k+1..n]) `div` (product [1..k])
+
+{-
+    Pascal's Triangle
+    -----------------
+    A binomial is the sum of two terms (x+y) so the binomial
+    theorem gives us
+    
+        (x+y)^0 = 1x^0y^0
+        (x+y)^1 = 1x^1y^0 + 1x^0y^1
+        (x+y)^2 = 1x^2y^0 + 2x^1y^1 + 1x^0y^2
+        (x+y)^3 = 1x^3y^0 + 3x^2y^1 + 3x^1y^2 + 1x^0y^3
+        ...
+        
+    To see how this happens, look at what happens when we raise
+    (x+y) to the nth power:  (x+y)(x+y)...(x+y)
+    
+                                            x + y
+                                            x + y *
+                              -------------------
+                              x^2 + xy + xy + y^2
+                                            x + y *
+    ---------------------------------------------                                            
+     x^3 + x^2y + x^2y + xy^2 + xy^2 + xy^2 + y^3
+                                            x + y *
+    ---------------------------------------------
+                                           etc...    
+                                           
+    Every term in the expansion is a product of x-factors and
+    y-factors, with the total number of factors always being
+    n, so each term has the form x^ky^(n-k). We can arrange
+    binomial coefficients in a triangle that works out to  
+    Pascal's triangle
+
+                            0
+                            0
+                        1       1
+                        0       0
+                    2       2       2
+                    0       1       2
+                3       3       3      3
+                0       1       2       3
+                
+                           etc
+                           
+    and working out their values i.e. n choose k, gives
+            
+                            1
+                        1       1
+                      1     2     1
+                    1   3      3    1
+                  1   4     6     4    1
+                  
+                           etc
+                           
+    and that gives the pattern:
+    
+                n   n-1     n-1
+                  =      +
+                k   k-1      k
+                        
+    which reduces to 
+                        n!
+                    ---------               [see choose' fn below]
+                    k! (n-k)!
+                    
+    while a closer look reveals the follwoing symmetry
+    
+                    n        n
+                       =                    [see binom fn below]
+                    k       n-k
+
+-}
+-- alternative definition, not as efficient as the first as repeatedly
+-- computes intermediate values
+choose' n 0 = 1
+choose' n k | n < k  = 0
+            | n == k = 1
+            | otherwise =  choose' (n-1) (k-1) 
+                        + (choose' (n-1) (k))
+ 
+-- an even better (efficient) choose function
+binom n 0 = 1
+binom n k | n < k = 0
+          | otherwise = (n * binom (n-1) (k-1)) `div` k
+          
+{-
+    9.4 Polynomials for Combinatorial Reasoning
+    -------------------------------------------
+   
+    To implement polynomial functions in a variable z we will
+    represent a polynomial
+    
+        f(z) = f0 + f1z + f2z^2 + ... + f(n-1)z^(n-1) + fnz^n
+        
+    and a list of its coefficients as
+    
+        [f0, f1, ..., fn]
+        
+    the function 'p2fct' maps the coeff list to corresponding
+    functions.
+    
+    f(z) = 0 is the constant zero polynomial
+    If f(z) is a polynomial, then we f for its coeff list
+    If the coeff list is not null, then the tail of the list is f_
+    so
+        f  = [f0, f1, ... , fn]
+        f_ = [f1, f2, ... , fn]
+        
+    which gives the identity:  f = f0:f_
+    and:  f(z) = f0 + zf_(z)
+    
+    The 'Polynomials.hs' file provides a number of functions for
+    working with polynomials which are declared as a data type
+    in class Num.
+    
+        negate          negate all coeffs in the polynomial
+        addition        add the coeffs of both polynomials
+        multiply (.*)   shift all coeffs one place to the right
+   
+-}          
+ex94a = (z+1)^0                 -- [1]
+ex94b = (z+1)                   -- [1,1]
+ex94c = (z+1)^2                 -- [1,2,1]
+ex94d = (z+1)^3                 -- [1,3,3,1]
+ex94e = (z+1)^4                 -- [1,4,6,4,1]
+ex94f = (z+1)^5                 -- [1,5,10,10,5,1]
+ex94g = (z+1)^6                 -- [1,6,15,20,15,6,1]
+
+{-
+    If we have a polynomial f(z) and we want the difference
+    list of its coeff [f0, f1-f0, f2-f1,...] then
+        
+        f(z) -> [ f0,   f1,   f2,   f3, ... ]
+      -zf(z) -> [  0,  -f0,  -f1,  -f2, ... ]
+   (1-z)f(x) -> [ f0,f1-f0,f2-f1,f3-f2, ... ]
+   
+   The Polynomial.hs file defines the function 'delta' which
+   computes the difference list of the coefficients.
+   
+   [Note:  this is NOT the same as the earlier difference functions
+           where we mapped a function to a list and took the 
+           difference between the results]
+           
+    Example:
+            delta [2,4,6]
+            
+            [  2,  4,  6,  0  ]
+          - [  0,  2,  4,  6  ]
+          = [  2,  2,  2, -6  ]
+-}
+ex94h = delta [2,4,6]           -- [2,2,2,-6]
+
+{-
+    Polynomial composition
+    
+    comp    f(z) compose g(z) is the polynomial f(g(z))
+            which equals f0 + g(z) * f_(g(z))
+
+    We can use composition to pick an arbitrary layer in Pascal's
+    Triangle or to generate Pascal's triangle up to an arbitrary
+    depth.
+    
+    A derivative function, deriv, is also provided.
+
+-}
+ex94i = comp (z^2)  (z+1)            -- [1,2,1]
+ex94j = comp (z^3)  (z+1)            -- [1,3,3,1]
+ex94k = comp (z^12) (z+1) -- [1,12,66,220,495,792,924,792,495,220,66,12,1]
+
+ex94l = comp [1,1,1,1,1,1] [[0],[1,1]]
+    -- [[1],[1,1],[1,2,1],[1,3,3,1],[1,4,6,4,1],[1,5,10,10,5,1]]
+
+{-
+    9.17 Examples
+    
+    How many ways are there of selecting ten red, blue or white 
+    marbles fro a vase in such a way that there are at least
+    two of each coloar and at most five marbles have the same
+    color?
+    
+    The answer is given by the coefficient z^10 in the following
+    polynomial:
+            (z^2 + z^3 + z^4 + z^5)^3
+-}    
+ex917a = ([0,0,1,1,1,1]^3) !! 10        -- 12
+
+{-
+    How many ways are there of selecting 10  red, blue or
+    white marbles from a vase ins such a way that there is
+    an even number of marbles of each color?
+-}
+ex917b = ([1,0,1,0,1,0,1,0,1,0,1]^3) !! 10       -- 21
+  
+{-
+    9.18 Example
+    
+    The polynomial (1+z)^10 solves the problem of picking r
+    elements from a set of 10. The finite list that solves
+    the problem,
+        [1,10,45,120,210,252,210,120,45,10,1]
+    is implement below
+-}  
+ex918 = (1+z)^10
+
+{-
+    9.19 Example
+    
+    The polynomial for picking r marbles from a vase containing
+    red, white and blue marbles, with a maximum of 5 of each 
+    color is:
+        (1 + z + z^2 + z^3 + z^4 + z^5)^3
+        
+    The solution 
+        [1,3,6,10,15,21,25,27,27,25,21,15,10,6,3,1]
+    is given by
+-}
+ex919 = (1 + z + z^2 + z^3 + z^4 + z^5)^3
+
+{-
+    9.20 Exercise
+    
+    Use polynomials to find out how many ways there are of
+    selecting 10 red, blue and white marles from a vase
+    in such a manner that the number of marbles from each
+    color is a prime.
+    
+    Provide solution:
+        put a 1 on the positions for the prime exponents
+-}
+ex920 = ([0,0,1,1,0,1,0,1,0,0,0]^3) !! 10           -- 6
+
+{-
+    9.5 Addendum
+    
+    Contains the following functions which provide an
+    alternative to Gaussian Elimination for curve-fitting
+    based on the use of 'falling' and 'rising' factorials
+    used by Newton (?)
+
+-}
+-- find the falling power or lower factorial
+infixr 8 ^-
+
+(^-) :: Integral a => a -> a -> a
+x ^- 0 = 1
+x ^- n = (x ^- (n-1)) * (x - n + 1)
+
+-- find the rising powers or upper factorials
+infixr 8 ^+
+
+(^+) :: Integral a => a -> a -> a
+x ^+ 0 = 1
+x ^+ n = (x ^+ (n-1)) * (x + n - 1)
+
+-- Newton's series formula
+newton :: (Fractional a, Enum a) => [a] -> [a]
+newton xs = [ x / product [1..fromInteger k]  |
+              (x,k) <- zip xs [0..]]
+              
+-- mapping a list of integers to a Newton polynomial representation
+-- (list of the exponents, with the exp representing falling powers)
+list2npol :: [Integer] -> [Rational]
+list2npol = newton . map fromInteger . firstDifs
+
+-- compute Stirling numbers
+stirlingC :: Integer -> Integer -> Integer
+stirlingC 0 0 = 1
+stirlingC 0 _ = 0
+stirlingC n k = (n-1) * (stirlingC (n-1) k) + stirlingC (n-1) (k-1)
+
+-- convert falling power to standard powers
+fall2pol :: Integer -> [Integer]
+fall2pol 0 = [1]
+fall2pol n = 0 : [(stirlingC n k) * (-1)^(n-k) | k <- [1..n]]
+
+-- convert Newton polynomials to standard polynomials
+-- (in coeff representation)
+npol2pol :: (Num a, Ord a) => [a] -> [a]
+npol2pol xs = sum [ [x] * (map fromInteger $ fall2pol k) |
+                              (x,k) <- zip xs [0..]]
+                              
+-- compute a polynomial from a sequence
+list2pol :: [Integer] -> [Rational]
+list2pol = npol2pol . list2npol
+
+ex95a = list2pol (map (\n -> 7*n^2 + 3*n-4) [0..100])
+ex95b = list2pol [0,1,5,14,30]
+ex95c = map (p2fct $ list2pol [0,1,5,14,30]) [0..8]   
+
+                           
+                              
