@@ -1,5 +1,5 @@
 {-
-    Chapter  - Polynomials
+    Chapter 9 - Polynomials
     
     References:
         "The Haskell Road to Logic, Maths and Programming, 2nd Edition"

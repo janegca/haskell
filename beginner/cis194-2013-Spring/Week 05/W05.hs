@@ -11,7 +11,7 @@ module W05 where
 {-
     Parametricity
     -------------
-    Haskell uses 'parametric polymorphsm' which means polymorphic functions
+    Haskell uses 'parametric polymorphism' which means polymorphic functions
         (a) must work uniformly for any input type
         (b) the calling function gets to choose the type
         (c) type checking happens at compile time, NO type information
