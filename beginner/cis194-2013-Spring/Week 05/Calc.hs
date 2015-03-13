@@ -8,6 +8,14 @@ import qualified StackVM as S
 import qualified Data.Map as M
 
 {-
+    Week 05 - More polymorphism and type classes Homework
+    
+    Ref:
+    http://www.seas.upenn.edu/~cis194/fall14/spring13/
+        hw/05-type-classes.pdf
+    
+-}
+{-
     Exercise 1
 
     Write Version 1 of the calculator: an evaluator for ExprT, with the
