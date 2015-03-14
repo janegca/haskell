@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 module Fibonacci where
 
 {-
@@ -128,7 +129,7 @@ fibs2'' = 0 : 1 : zipWith (+) fibs2 (tail fibs2)
       which works by showing only some prefix of a stream (say, the
       first 20 elements).
 -}                
-data Stream a = Stream a (Stream a)       -- can't use (:) directly
+data Stream a = Stream a (Stream a)
 
 streamToList :: Stream a -> [a]
 streamToList (Stream x xs) = x : streamToList xs
@@ -175,7 +176,49 @@ streamFromSeed f x = Stream x $ streamFromSeed f (f x)
 
 ex4c = streamFromSeed (+2) 0
 
+{-
+    Exercise 5
 
+    Now that we have some tools for working with streams, let’s create
+    a few:
+    
+    • Define the stream
+        nats :: Stream Integer
+      which contains the infinite list of natural numbers 0, 1, 2, . . .
+    
+    • Define the stream
+        ruler :: Stream Integer
+    
+      which corresponds to the ruler function
+    
+        0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, . . .
+    
+      where the nth element in the stream (assuming the first element
+      corresponds to n = 1) is the largest power of 2 which evenly
+      divides n.
 
+    Hint: define a function  interleaveStreams which alternates
+          the elements from two streams. Can you use this function to 
+          implement ruler in a clever way that does not have
+          to do any divisibility testing? 
 
+-}
+nats :: Stream Integer
+nats = streamFromSeed (+1) 0
 
+-- Source: 
+--    https://github.com/prakashk/cis-194/blob/master/wk06/Fibonacci.hs
+ruler :: Stream Integer
+ruler = streamMap f $ streamFromSeed (+1) 1
+        where f x | odd x = 0
+                  | otherwise = 1 + f (x `div` 2)
+            
+-- Source: Bryan Brady post at
+-- http://thread.gmane.org/gmane.comp.lang.haskell.beginners/13062/
+--          focus=13064
+
+interleaveStreams :: Stream a -> Stream a ->Stream a
+interleaveStreams (Stream a as) bs = Stream a (interleaveStreams bs as)
+                  
+ruler' :: Stream Integer
+ruler' = foldr1 interleaveStreams (map streamRepeat [0..])                  

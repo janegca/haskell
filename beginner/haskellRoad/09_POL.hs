@@ -12,7 +12,7 @@ import Data.Ratio
 import Polynomials
 
 {-
-    "Polynomicals ... are functions that can be represented by
+    "Polynomials ... are functions that can be represented by
     a finite number of additions, subtractions, and multiplications
     with one independent variable."
     
