@@ -222,3 +222,4 @@ interleaveStreams (Stream a as) bs = Stream a (interleaveStreams bs as)
                   
 ruler' :: Stream Integer
 ruler' = foldr1 interleaveStreams (map streamRepeat [0..])                  
+
