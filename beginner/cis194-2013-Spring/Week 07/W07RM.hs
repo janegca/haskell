@@ -1,6 +1,7 @@
 module W07RFM where
 
 import Data.Monoid
+import qualified Data.Foldable as F
 
 {-
     Week 07 - Folds and Monoids
@@ -11,6 +12,10 @@ import Data.Monoid
         07-folds-monoids.html
 -} 
 {-
+    Ref: Learn You a Haskell - Monoids
+         http://learnyouahaskell.com/
+            functors-applicative-functors-and-monoids#monoids
+    
     Monoids
     -------
     A monoid is an associative (placement of parentheses makes
@@ -103,10 +108,11 @@ import Data.Monoid
     
     Sum has a similar defintion.
 -}
-prod1 = getProduct $ Product 3 `mappend` Product 9 
-prod2 = getProduct $ Product 3 `mappend` mempty
-prod3 = getProduct $ Product 3 `mappend` Product 4 `mappend` Product 2
-prod4 = getProduct . mconcat . map Product $ [3,4,2]
+prod1 = getProduct $ Product 3 `mappend` Product 9          -- 27                    
+prod2 = getProduct $ Product 3 `mappend` mempty             -- 3
+prod3 = getProduct $ Product 3 `mappend` 
+                       Product 4 `mappend` Product 2        -- 24
+prod4 = getProduct . mconcat . map Product $ [3,4,2]        -- 24
 
 {-
     Any and All
@@ -127,5 +133,190 @@ prod4 = getProduct . mconcat . map Product $ [3,4,2]
         instance Monoid All where  
             mempty = All True  
             All x `mappend` All y = All (x && y)      
-
+            
+    They work like the Product example.
 -}
+any1 = getAny $ Any True `mappend` Any False                    -- True
+any2 = getAny $ mempty   `mappend` Any True                     -- True
+any3 = getAny . mconcat . map Any $ [False, False, False, True] -- True 
+any4 = getAny $ mempty `mappend` mempty                         -- False
+
+all1 = getAll $ mempty `mappend` All True                       -- True
+all2 = getAll $ mempty `mappend` All False                      -- False
+all3 = getAll . mconcat . map All $ [True, True, True]          -- True
+all4 = getAll . mconcat . map All $ [True, True, False]         -- False
+all5 = getAll $ mempty `mappend` mempty                         -- True
+
+{-
+    The Ordering Monoid
+    -------------------
+    The instance is defined as
+    
+        instance Monoid Ordering where  
+        mempty = EQ  
+        LT `mappend` _ = LT  
+        EQ `mappend` y = y                  -- the identity
+        GT `mappend` _ = GT  
+        
+    Note that x `mappend` y is not the same as y `mappend` x 
+    
+-}
+ord1 = mappend LT GT            -- LT
+ord2 = mappend GT LT            -- GT
+ord3 = mappend mempty LT        -- LT
+ord4 = mappend mempty GT        -- GT
+
+-- an example of using the Ordering Monoid
+-- order two strings based on length, if equal lenght, order
+-- alphabetically
+lengthCompare :: String -> String -> Ordering  
+lengthCompare x y = let a = length x `compare` length y   
+                        b = x `compare` y  
+                    in  if a == EQ then b else a  
+                    
+comp1 = lengthCompare "zen" "ants"          -- LT  based on length
+comp2 = lengthCompare "zen" "ant"           -- GT  based on alpha order
+
+-- but we could write lengthCompare using our knowledge of it as a
+-- Monoid
+lengthCompareM :: String -> String -> Ordering  
+lengthCompareM x y = (length x `compare` length y) `mappend`  
+                        (x `compare` y)  
+
+compM1 = lengthCompareM "zen" "ants"        -- LT
+compM2 = lengthCompareM "zen" "ant"         -- GT
+
+{-
+    Walkthrough:
+            lengthCompareM "zen" "ants"
+         -> mappend (compare (length "zen") (length "ants")
+                    (compare "zen" "ants")
+         -> mappend (compare 3 4) (compare "zen" "ants")
+         -> mappend LT _
+         -> LT
+         
+            lengthCompareM "zen" "ant"
+         -> mappend (compare (length "zen") (length "ants")
+                    (compare "zen" "ant")
+         -> mappend (compare 3 3) (compare "zen" "ant")
+         -> mappend EQ (compare "zen" "ant")
+         -> compare "zen" ant"
+         -> GT
+                  
+-}               
+
+-- expand lengthCompareM to make the number of vowels the second
+-- criterion for ordering
+lengthCompareV :: String -> String -> Ordering  
+lengthCompareV x y = (length x `compare` length y) `mappend`  
+                     (vowels x `compare` vowels y) `mappend`  
+                     (x `compare` y)  
+    where vowels = length . filter (`elem` "aeiou") 
+    
+compV1 = lengthCompareV "zen" "anna"        -- LT
+compV2 = lengthCompareV "zen" "ana"         -- LT
+compV3 = lengthCompareV "zen" "ann"         -- GT
+
+{-
+    Maybe Monoid
+    ------------
+    The instance is defined as
+    
+        instance Monoid a => Monoid (Maybe a) where  
+        mempty                    = Nothing  
+        Nothing `mappend` m       = m  
+        m `mappend` Nothing       = m  
+        Just m1 `mappend` Just m2 = Just (m1 `mappend` m2)  
+        
+    This instance has a class constraint; the Maybe monoid will only
+    work on types that also belong to the Monoid class.
+    
+    If the type contents of the Maybe aren't monoids we can use
+    the First a monoid to always return the (Just a) value
+    
+        newtype First a = First { getFirst :: Maybe a }  
+        deriving (Eq, Ord, Read, Show)  
+        
+        instance Monoid (First a) where  
+        mempty                     = First Nothing  
+        First (Just x) `mappend` _ = First (Just x)  
+        First Nothing  `mappend` x = x
+
+    The mconcat function can be used to returned any (Just a)
+    value form a list.
+    
+    There is also a Last a which works the same way, returning the
+    last (Just a) value
+
+-}    
+maybe1 = Nothing `mappend` Just "andy"          -- Just "andy"
+maybe2 = Just LT `mappend` Nothing              -- Just LT
+maybe3 = Just (Sum 3) `mappend` Just (Sum 4)    -- Just (Sum {getSum = 7})
+
+first1 = getFirst $ First (Just 'a') `mappend` First (Just 'b')-- Just 'a'
+first2 = getFirst $ First Nothing `mappend` First (Just 'b')   -- Just 'b'
+first3 = getFirst $ First (Just 'a') `mappend` First Nothing   -- Just 'a'
+first4 = getFirst . mconcat . map First $ [Nothing, Just 9, Just 10] 
+            -- Just 9
+            
+last1 = getLast . mconcat . map Last $ [Nothing, Just 9, Just 10] 
+            -- Just 10            
+last2 = getLast $ Last (Just "one") `mappend` Last (Just "two") 
+            -- Just "two"
+            
+{-
+    Using monoids to fold data structures
+    -------------------------------------
+    The Foldable module contains implementations of foldr, foldl,
+    foldr1 and foldr2 that will work on ANY type, not just lists.
+    
+    Where foldr has the type signature
+        (a -> b -> b) -> b -> [a] -> b
+        
+    The foldr from Foldable has the type signature
+        (Foldable t) => (a -> b -> b) -> b -> t a -> b
+        
+    And, as a list is just another type, Foldable foldr will also
+    work on lists.
+-}            
+-- example of folding over Maybe
+fldMaybe1 = F.foldl (+) 2 (Just 9)         -- 11
+fldMaybe2 = F.foldr (||) False (Just True) -- True
+
+-- example of making a custom type Foldable
+data Tree a = Empty 
+            | Node a (Tree a) (Tree a) 
+    deriving (Show, Read, Eq)
+
+-- create a Foldable instance of our Tree type
+instance F.Foldable Tree where  
+    foldMap f Empty        = mempty  
+    foldMap f (Node x l r) = F.foldMap f l `mappend`  
+                             f x           `mappend`  
+                             F.foldMap f r 
+                             
+testTree = Node 5  
+            (Node 3  
+                (Node 1 Empty Empty)  
+                (Node 6 Empty Empty)  
+            )  
+            (Node 9  
+                (Node 8 Empty Empty)  
+                (Node 10 Empty Empty)  
+            )                              
+                             
+fldTree1 = F.foldl (+) 0 testTree   -- 42
+fldTree2 = F.foldl (*) 1 testTree   -- 64800
+
+-- is any number in our tree equal to 3?
+fldTree3 = getAny $ F.foldMap (\x -> Any $ x == 3) testTree  -- True
+
+-- is any number in our tree greater than 15?
+fldTree4 = getAny $ F.foldMap (\x -> Any $ x > 15) testTree  -- False
+
+-- convert the testTree to a list
+fldTree5 = F.foldMap (\x -> [x]) testTree
+
+-- all of the above 'tricks' will work on any Foldable structure
+                             
+                             
