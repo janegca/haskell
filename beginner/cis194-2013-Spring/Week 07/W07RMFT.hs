@@ -1,4 +1,7 @@
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE IncoherentInstances   #-}
 module W07RMFT where
 
 import Data.Monoid
@@ -10,6 +13,20 @@ import Data.Monoid
     Ref:
     http://www.seas.upenn.edu/~cis194/fall14/spring13/lectures/
         07-folds-monoids.html
+        
+    NOTES:
+        the article is not really for beginners
+        it got more difficult to follow as it progressed;  
+        the code, as given, did not always compile nor were
+        there any actual tree examples
+      
+    TODO:      
+        There is a FingerTree package that appears to incorporate
+        the technique explained in the article; possibly track
+        down some tutorials that use it
+        
+        http://hackage.haskell.org/package/fingertree-0.1.0.1/docs/
+                Data-FingerTree.html
 -} 
 {-
     Ref: Heinrich Apfelmus - Monoids and Finger Trees
@@ -91,7 +108,9 @@ tHead (Branch _ x _) = tHead x
 (!!*) _ _            = error "invalid index"    
      
 tree1 = branch (branch (leaf 'a') (leaf 'b'))
-               (branch (leaf 'c') (branch (leaf 'd') (leaf 'e')))     
+               (branch (leaf 'c') (branch (leaf 'd') (leaf 'e')))    
+
+ex1 = (!!*) tree1 3   -- 'd'
      
 {-
     A Priority Queue
@@ -113,7 +132,7 @@ tree1 = branch (branch (leaf 'a') (leaf 'b'))
     This requires slightly different smart constructors to satisfy
     annotations of 
         tag (Leaf .. a)     = priority a
-        tag (Barnch .. x y) = tag x `min` tag y
+        tag (Branch .. x y) = tag x `min` tag y
 -}                          
 
 type Priority = Int
@@ -136,7 +155,9 @@ winner t = go t
     go (Leaf   _ a)        = a
     go (Branch _ x y)
         | tag x == tag t = go x   -- winner on left
-        | tag y == tag t = go y   -- winner on right                
+        | tag y == tag t = go y   -- winner on right     
+
+ex2 = winner tree2    -- 'c'  
 
 {-
     Monoids - the grand unifier
@@ -152,13 +173,59 @@ winner t = go t
     -----------------------
     
     We can obtain the tags of a branch using the monoid 'mappend' 
-    function
+    function (for which we use (<>), defined as the mappend operator 
+    in Data.Monoid)
         
-        tag (Branch _ x y) = tag x `mappend` tag y
+        tag (Branch _ x y) = tag x <> tag y
         
-    by setting up the correct monoid instances for Size and Priority
-    (see below).
+    by setting up the correct monoid instances and smart constructors.
     
- 
-
+    So the tree structures, with their annotations, become
+    
+        (v1<>v2) <> (v3<>v4)         v1 <> (v2<>(v3<>v4))
+               /    \                  /  \
+              /      \               v1   v2 <> (v3<>v4)
+             /        \              a1     /  \
+         v1 <> v2  v3 <> v4               v2   v3 <> v4 
+           /  \      /  \                 a2     /  \
+          v1  v2    v3  v4                     v3   v4
+          a1  a2    a3  a4                     a3   a4    
+          
+    Generally, the tag at the root of the tree is
+    
+        measure a1 <> measure a2 <> measure a3 <> ... <> measure an
+        
 -}        
+
+-- annotation instance for size of tree
+instance Monoid Size where
+    mempty  = 0
+    mappend = (+)
+
+-- for the leaves, the tag is obtained from the element
+class Monoid v => Measured a v where
+    measure :: a -> v
+
+instance Measured a Size where
+   measure _ = 1                   -- one element = size 1
+    
+branch'' :: Monoid Size => Tree v a -> Tree v a -> Tree v a
+branch'' x y = Branch (tag x <> tag y) x y
+
+leaf'' :: Measured a v => a -> Tree v a
+leaf'' a = Leaf (measure a) a
+
+instance Measured a v => Measured (Tree v a) v where
+    measure = tag
+    
+search :: Measured a v => (v -> Bool) -> Tree v a -> Maybe a
+search p t
+    | p (measure t) = Just (go mempty p t)
+    | otherwise     = Nothing
+    where
+    go i p (Leaf _ a) = a
+    go i p (Branch _ l r)
+        | p (i <> measure l) = go i p l
+        | otherwise          = go (i <> measure l) p r
+        
+
