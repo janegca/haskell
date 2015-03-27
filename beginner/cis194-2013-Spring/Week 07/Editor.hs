@@ -1,6 +1,15 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving
            , ScopedTypeVariables
    #-}
+{-
+    Week 07 - Folds and Monoids
+              supplied module
+    
+    Ref:
+    http://www.seas.upenn.edu/~cis194/fall14/spring13/lectures/
+        07-folds-monoids.html
+-}
+   
 module Editor where
 
 import System.IO
