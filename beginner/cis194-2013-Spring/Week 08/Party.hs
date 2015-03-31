@@ -27,6 +27,7 @@ module Party where
 
 import Data.Monoid
 import Data.Tree
+import Data.List (sort)
 import Employee
 
 -- some test employees
@@ -151,16 +152,13 @@ treeFold fn (Node root subTrees) = fn root (map (treeFold fn) subTrees)
     and the overall best guest list that doesn’t include Bob.
 -}
 -- solution: 
--- https://github.com/pdswan/cis194/blob/master/hw8/Party.hs
-
+-- https://github.com/jroblak/haskell-learnings/blob/master/
+--          upenn/hw8/hw8.hs#L23
 nextLevel :: Employee -> [(GuestList, GuestList)] -> (GuestList, GuestList)
-nextLevel boss []   = (glCons boss mempty, mempty)
-nextLevel boss emps = (maximum withBoss, maximum sansBoss)
-    where
-        sansBoss = map fst emps
-        withBoss = map (glCons boss) $ map snd emps
-        
-        
+nextLevel boss xs = (maxWithBoss, maxSansBoss)
+    where maxSansBoss = mconcat $ map (uncurry moreFun) xs;
+          maxWithBoss = glCons boss $ maxSansBoss 
+                
 {-
     Exercise 4
 
@@ -204,26 +202,16 @@ ex5 = maxFun testCompany2
     all your function types, you are Doing It Wrong.
     
 -}
-  -- TODO:
-  --    need to display names in sorted order
-  --    reading the file twice by grabbing maxFun and then names
-  --    better to write a process that goes thru the data once
-  --    putting it in a format that can then be displayed as
-  --    desired
+-- solution:
+-- https://github.com/jroblak/haskell-learnings/blob/master/
+--          upenn/hw8/hw8.hs#L23
+
+formatList :: GuestList -> String
+formatList (GL emps fun) = "Total fun: " ++ show fun ++ "\n" 
+                        ++ (unlines . sort . map empName $ emps)
 
 main :: IO ()
-main = do company <- readTree `fmap` readFile "company.txt"
-          let fun = guestListFun (maxFun company)
-          putStrLn $ "Total fun: " ++ (show fun)
-          let name = getEmpName company
-          putStrLn name
-          return ()
+main = do
+        file <- readFile "company.txt"
+        putStr . formatList . maxFun . read $ file
 
-readTree :: String -> Tree Employee
-readTree = read
-          
-guestListFun :: GuestList -> Integer
-guestListFun (GL _ fun) = fun       
-          
-getEmpName :: Tree Employee -> String   
-getEmpName (Node e _) = empName e      
