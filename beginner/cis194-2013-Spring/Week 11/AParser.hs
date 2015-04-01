@@ -1,3 +1,12 @@
+{-
+    Week 11 Applicative Functors - Part 2
+        File supplied as part of homework
+    
+    Ref:
+    http://www.seas.upenn.edu/~cis194/fall14/spring13/lectures/
+        11-applicative2.html        
+-}
+
 module AParser (Parser, runParser, satisfy, char, posInt) where
 
 import           Control.Applicative

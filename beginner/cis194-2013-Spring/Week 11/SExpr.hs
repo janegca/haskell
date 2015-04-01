@@ -1,5 +1,10 @@
-{- CIS 194 HW 11
-   due Monday, 8 April
+{-
+    Week 11 Applicative Functors - Part 2
+        Homework
+    
+    Ref:
+    http://www.seas.upenn.edu/~cis194/fall14/spring13/lectures/
+        11-applicative2.html        
 -}
 
 module SExpr where
