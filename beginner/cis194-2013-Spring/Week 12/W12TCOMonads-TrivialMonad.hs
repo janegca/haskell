@@ -150,17 +150,12 @@ exApp2 = g' 2 (W' 3)            -- W' 5
 --  that are Functors provide a method for 'visiting' each
 --  element in the structure. Structures that are Applicative
 --  provide a means to 'visit' each element in multiple ways
---  i.e. say you have a dictionary of names and numbers stored
---       in a tree structure. You might want to extract all
---       names with numbers in a particular area code whose
---       last name begins with an 'S'.  Instead of having to
---       go through the tree twice, you can use the 
---       Applicative functions <$> and <*> to visit each
---       element once, check both the area code and first char
---       of the last name and return only those elements which
---       meet those requirements.
-
-
+--  although, might be better to think of it in terms of 
+--  abstract structures i.e. IO is a structure that allows
+--  interaction with externals; a 'space' that's acted in
+--  Is that why 'context' is stressed? It's the working environment
+--  the processing environment that acts as the 'structure'; not
+--  simply a list or tree or Maybe container
 
 
 
