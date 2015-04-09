@@ -1,0 +1,30 @@
+\documentclass{scrbook}
+\input{preamble}
+\begin{document}
+\frontmatter
+\begin{titlepage}
+\raggedleft
+%{\large Notes on \\}
+{\Huge\scshape Notes on Functional Programming in Haskell\\[.2in]}
+{\large from various online and offline resources\\[1in]}
+\vfill
+{\itshape 2015}
+\end{titlepage}
+\tableofcontents
+\mainmatter
+%=================================================
+\include{Typeclasses}
+%=================================================
+\appendix
+
+\backmatter
+% pages numbered with Arabic numbers
+% toc entry created but no chapter numbers
+\nocite{*}
+%\bibliographystyle{plainnat}
+\bibliographystyle{unsrtnat}    
+% need to run BibTex to pick this up
+% run pdfLatex, BibTex, and 2 or 3 more runs of pdfLatex to remove all errors
+\bibliography{fp}
+
+\end{document}

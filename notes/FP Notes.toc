@@ -1,0 +1,7 @@
+\select@language {english}
+\contentsline {chapter}{Contents}{iii}{chapter*.1}
+\contentsline {chapter}{\numberline {1}Typeclasses}{1}{chapter.1}
+\contentsline {section}{\numberline {1.1}Introduction}{1}{section.1.1}
+\contentsline {section}{\numberline {1.2}Declaring Typeclasses}{1}{section.1.2}
+\contentsline {section}{\numberline {1.3}Adding Class Constraints (Subclasses)}{3}{section.1.3}
+\contentsline {chapter}{Bibliography}{5}{appendix*.2}

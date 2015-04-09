@@ -1,0 +1,15 @@
+\begin{thebibliography}{1}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Wadler and Blott(1988)]{WADLER-BLOTT}
+Philip Wadler and Steven Blott.
+\newblock {How to make ad-hoc polymorphism less ad-hoc}.
+\newblock October 1988.
+\newblock URL
+  \url{http://202.3.77.10/users/karkare/courses/2010/cs653/Papers/ad-hoc-polymorphism.pdf}.
+
+\end{thebibliography}

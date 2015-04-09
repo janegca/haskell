@@ -1,0 +1,63 @@
+\usepackage[english]{babel}
+\usepackage{scrhack}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{natbib}
+\usepackage{tocbibind}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{moresize}
+\usepackage{paralist}
+\usepackage{multicol}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\usepackage[colorlinks=true, linkcolor=blue, linktoc=page]{hyperref}
+\usepackage[a5paper]{geometry}
+\usepackage{graphicx}
+\usepackage{listings}  % for display of code listings
+\lstset{language=Haskell, tabsize=4, keywordstyle=\color{blue},
+commentstyle=\color{OliveGreen}, basicstyle=\footnotesize, keepspaces=true}
+%\lstset{basicstyle=\ttfamily, tabsize=4,  basicstyle=\footnotesize}
+% set up theorem formatting, has to be done in document environ
+\newtheorem*{thm}{Theorem}  % no numbering
+\newtheorem{lem}{Lemma}
+\theoremstyle{definition}
+\newtheorem{dfn}{Definition}
+\theoremstyle{remark}
+\newtheorem*{note}{Note}
+% -- Global settings -------------
+\setcounter{tocdepth}{4}
+\raggedbottom
+\setlength{\parskip}{1.2ex}
+\setlength{\parindent}{0ex}
+\setcounter{MaxMatrixCols}{14}    % matrix column limit
+%  -- Macros ------------------------
+% colors the background of a character box
+\newcommand\bb{\colorbox{blue!10}	}
+\newcommand\yb{\colorbox{yellow}}
+\newcommand\gb{\colorbox{green}}
+	
+\newcommand*{\boxedcolor}{red}
+\makeatletter
+\renewcommand{\boxed}[1]{\textcolor{\boxedcolor}{%
+  \fbox{\normalcolor\m@th$\displaystyle#1$}}}
+\makeatother	
+
+% colors the full background of a cell in a matrix/table
+\newcommand\yc{\cellcolor{yellow!30}}
+\newcommand\bc{\cellcolor{blue!10}}
+\newcommand\rc{\cellcolor{red!10}}
+\newcommand\gc{\cellcolor{green!10}}
+\newcommand\oc{\cellcolor{orange!30}}
+\newcommand\wc{\cellcolor{white}}
+
+% color names for theorem section
+\newcommand\qs[1]{{\color{red}#1}}
+\newcommand\res[1]{{\color{blue}#1}}
+% --- Save notes ---------------------------------
+% use to create a colored box
+%\fcolorbox{black}{blue!10}{\parbox[b][4em][c]{0.95\textwidth}{some text}}
