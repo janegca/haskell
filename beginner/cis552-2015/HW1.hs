@@ -434,7 +434,7 @@ t3gc = "3gc" ~: zip [True] [1,2]           ~?= [(True, 1)]
 -- for example:
 --    transpose [[1,2,3],[4,5,6]] returns [[1,4],[2,5],[3,6]]
 --
--- NOTE: this is inefficient and inelegant
+-- NOTE: this is neither elegant nor efficient
 --       assumes elems are rows, length of an element is # of columns
 --       Check Prelude definition
 transpose :: [[a]] -> [[a]]
@@ -461,6 +461,23 @@ t3hb = "3hb" ~: transpose [[1,4],[2,5],[3,6]] ~?= [[1,2,3],[4,5,6]]
 t3hc = "3hc" ~: transpose [[1,2,3]]           ~?= [[1],[2],[3]]
 t3hd = "3hd" ~: transpose [[1],[2],[3]]       ~?= [[1,2,3]]
 t3he = "3he" ~: transpose ([] :: [[Int]])     ~?= []
+
+-- alternative from
+-- https://github.com/Yuhta/cis552/blob/master/hw1/Main.hs
+transpose'' :: [[a]] -> [[a]]
+transpose'' [] = []
+transpose'' xss | any null xss = []
+                | otherwise    = map head xss 
+                               : (transpose'' . map tail $ xss)
+
+-- Data.List definition of transpose, uses list comprehensions
+-- to build sublists
+transpose'               :: [[a]] -> [[a]]
+transpose' []             = []
+transpose' ([]   : xss)   = transpose' xss
+transpose' ((x:xs) : xss) = 
+    (x : [h | (h:_) <- xss]) : transpose' (xs : [ t | (_:t) <- xss]) 
+
 
 -- Problem 4
 -- Find the longest common subsequence between two strings
