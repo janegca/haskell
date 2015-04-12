@@ -137,11 +137,12 @@ mapTree f = foldTree Leaf (\x t1 t2 -> Branch (f x) t1 t2)
 -- The invertTree function takes a tree of pairs and returns a new tree 
 -- with each pair reversed.  For example:
 --     invertTree (Branch ("a",1) Leaf Leaf) returns Branch (1,"a") Leaf Leaf
+invertTree :: Tree (a,b) -> Tree (b,a)
+invertTree = mapTree (\(a,b) -> (b,a))
 
-invertTree = undefined
 t0a :: Test
-t0a = "0a" ~: assertFailure "testcase for invertTree"
- 
+t0a = "0a" ~: invertTree (Branch ("a",1) Leaf Leaf) 
+           ~?= Branch (1,"a") Leaf Leaf
 
 -- 0 (b)
 
@@ -153,14 +154,19 @@ t0a = "0a" ~: assertFailure "testcase for invertTree"
 tree1 :: Tree Int
 tree1 = Branch 1 (Branch 2 Leaf Leaf) (Branch 3 Leaf Leaf)
 
---     takeWhileTree (< 3) tree1  returns Branch 1 (Branch 2 Leaf Leaf) Leaf
---     takeWhileTree (< 9) tree1  returns tree1
---     takeWhileTree (< 0) tree1  returns Leaf
+--  takeWhileTree (< 3) tree1  returns Branch 1 (Branch 2 Leaf Leaf) Leaf
+--  takeWhileTree (< 9) tree1  returns tree1
+--  takeWhileTree (< 0) tree1  returns Leaf
 
-takeWhileTree = undefined
-t0b :: Test
-t0b = "0b" ~: assertFailure "testcase for takeWhileTree"
- 
+takeWhileTree :: (a -> Bool) -> Tree a -> Tree a
+takeWhileTree p = foldTree Leaf 
+                    (\e t1 t2 -> if p e then Branch e t1 t2 else Leaf)
+           
+t0b, t0ba, t0bb :: Test
+t0b = "0b" ~: takeWhileTree (< 3) tree1 
+           ~?= Branch 1 (Branch 2 Leaf Leaf) Leaf
+t0ba = "0ba" ~: takeWhileTree (< 9) tree1  ~?= tree1
+t0bb = "0bb" ~: takeWhileTree (< 0) tree1  ~?= Leaf
 
 -- 0 (c) 
  
@@ -169,11 +175,12 @@ t0b = "0b" ~: assertFailure "testcase for takeWhileTree"
 -- for example:
 --    allTree odd tree1 returns False
 
-allTree = undefined
-t0c :: Test
-t0c = "0c" ~: assertFailure "testcase for allTree"
- 
+allTree :: (a -> Bool) -> Tree a -> Bool
+allTree p = foldTree True (\e t1 t2 -> (p e) && t1 && t2)
 
+t0c :: Test
+t0c = "0c" ~: allTree odd tree1 ~?= False
+ 
 -- 0 (d) WARNING: This one is a bit tricky!  (Hint: the value
 -- *returned* by foldTree can itself be a function.)
 
@@ -184,11 +191,16 @@ t0c = "0c" ~: assertFailure "testcase for allTree"
 -- for example:
 --    map2Tree (+) (Branch 1 Leaf (Branch 2 Leaf Leaf)) (Branch 3 Leaf Leaf)
 --        should return (Branch 4 Leaf Leaf)
-
-map2Tree = undefined
-
+map2Tree :: (a -> a -> b) -> Tree a -> Tree a -> Tree b
+map2Tree _ Leaf _ = Leaf
+map2Tree _ _ Leaf = Leaf
+map2Tree f (Branch e1 a1 a2) (Branch e2 b1 b2)
+    = Branch (f e1 e2) (map2Tree f a1 a2) (map2Tree f b1 b2)
+    
 t0d :: Test
-t0d = "0d" ~: assertFailure "testcase for map2Tree"
+t0d = "0d" ~: map2Tree (+) (Branch 1 Leaf (Branch 2 Leaf Leaf)) 
+                                          (Branch 3 Leaf Leaf)
+           ~?= (Branch 4 Leaf Leaf)
 
 -- 0 (e) 
 
@@ -201,20 +213,26 @@ t0d = "0d" ~: assertFailure "testcase for map2Tree"
 
 -- To use foldTree, you'll need to think about this one in
 -- the same way as part (d).
-
-zipTree = undefined
-
+zipTree :: Tree a -> Tree b -> Tree (a,b)
+zipTree Leaf _ = Leaf
+zipTree _ Leaf = Leaf
+zipTree (Branch e1 a1 a2) (Branch e2 b1 b2) 
+    = Branch (e1,e2) (zipTree a1 b1) (zipTree a2 b2)
+    
 t0e :: Test
-t0e = "0e" ~: assertFailure "testcase(s) for zipTree"
+t0e = "0e" ~: zipTree (Branch 1 (Branch 2 Leaf Leaf) Leaf) 
+                       (Branch True Leaf Leaf)
+           ~?= (Branch (1,True) Leaf Leaf)
 
 test0 :: Test
-test0 = TestList [ t0a, t0b, t0c, t0d, t0e ]
+test0 = TestList [ t0a, t0b, t0ba, t0bb, t0c, t0d, t0e] 
 
 ----------------------------------------------------------------------
 
 -- | Display a gloss picture, given the name of the window, size of the 
 -- window, position, background color and the picture itself. 
-displayInWindow :: String -> (Int, Int) -> (Int, Int) -> Color -> Picture -> IO ()
+displayInWindow :: String -> (Int, Int) -> (Int, Int) 
+                          -> Color -> Picture -> IO ()
 displayInWindow x y z = display (InWindow x y z)
 
 -- | a picture composed of concentric circles
@@ -262,19 +280,34 @@ drawSierpinski =
       sierpinskiPicture = color blue (pictures (sierpinski 0 0 256))
 
 -- 1 (a)
-
+-- Given a ration for the child sizes and an initial size, create
+-- a tree structure storing the size of each branch
 calcSize :: Float -> Float -> Tree Float
-calcSize _ _ = error "calcSize: unimplemented"
+calcSize r s | s < minSize = Leaf
+             | otherwise   = Branch s (calcSize r (s*r)) 
+                                      (calcSize r (s*r))
 
 t1a :: Test
 t1a = "1a" ~: calcSize 0.5 25 ~=?
          Branch 25.0 (Branch 12.5 Leaf Leaf) (Branch 12.5 Leaf Leaf)
 
 -- 1 (b)
-
+-- The function fractal delta angle x y sizeTree should return a tree of
+-- pictures, where the root of the tree starts at position (x,y) and 
+-- draws a line of the given angle. The direction of each of the child 
+-- trees should be computed by adding and subtracting delta from the 
+-- parent's angle
+--
+-- Solution from: https://github.com/x-y-z/2011fall/blob/master/
+--                       cis552/hw/2/Main.hs
 fractal :: Float -> Float -> Float -> Float -> Tree Float -> Tree Picture
-fractal _ _ _ _ _ = error "fractal: unimplemented" 
-
+fractal _ _ _ _ Leaf = Leaf
+fractal d a x y (Branch s t1 t2)
+    = Branch (Line [(x,y),(x',y')]) (fractal d (a+d) x' y' t1)
+                                    (fractal d (a-d) x' y' t2)
+    where x' = s * (cos a) + x
+          y' = s * (sin a) + y
+          
 t1b :: Test
 t1b = "1b" ~: fractal (pi/2) 0 0 0 (calcSize 0.5 25) ~=? 
                Branch (Line [(0.0,0.0),(25.0,0.0)]) 
@@ -282,37 +315,106 @@ t1b = "1b" ~: fractal (pi/2) 0 0 0 (calcSize 0.5 25) ~=?
                   (Branch (Line [(25.0,0.0),(25.0,-12.5)]) Leaf Leaf)
 
 -- 1 (c) 
-
+-- convert the tree into a single picture
+-- Solution from: https://github.com/x-y-z/2011fall/blob/master/
+--                       cis552/hw/2/Main.hs
 join :: Tree Picture -> Picture
-join = error "join: unimplemented"
+join = foldTree Blank (\a t1 t2 -> pictures ([a] ++ [t1] ++ [t2]))
 
 t1c :: Test
-t1c = "1c" ~: join (Branch Blank Leaf Leaf) ~?= Pictures [Blank, Blank, Blank]
+t1c = "1c" ~: join (Branch Blank Leaf Leaf) 
+           ~?= Pictures [Blank, Blank, Blank]
 
 -- | create a fractal tree with some initial parameters. Try changing 
 -- some of these values to see how that changes the tree. In particular, 
--- try changing the delta for the angle of the branches (initially pi/6 below).
+-- try changing the delta for the angle of the branches 
+-- (initially pi/6 below).
+-- [Note: changing the angle narrows or widens the tree]
 fractalTree :: Picture
-fractalTree = color blue (join (fractal (pi/6) (pi/2) 0 0 sizeTree)) where
+fractalTree = color blue (join (fractal (pi/6) (pi/2) 0 (-200) sizeTree)) where
    sizeTree = calcSize 0.6 150.0
 
 drawTree :: IO ()
-drawTree = displayInWindow "MyWindow" (700,700) (10,10) white fractalTree
+drawTree = displayInWindow "MyWindow" (400,400) (10,10) white fractalTree
 
 test1 :: Test
 test1 = TestList [t1a,t1b,t1c]
 
 ----------------------------------------------------------------------
+{- 3
+    Transform a  SimpleXML document from one form (a PLAY) to
+    another (HTML).
+    
+    Notes:
+    
+    Basic mapping of Play to HTML:
+    
+    0   PLAY                                    html, body
+    1   |- TITLE    [PCDATA]                    h1
+    1   |- PERSONAE                             h2, "Dramatis Personae"
+    2       |- PERSONA* [PCDATA]                br
+    1   |- ACT*                                 
+    2       |- TITLE    [PCDATA]                h2
+    2       |- SCENE*
+    3            |- TITLE   [PCDATA]            h3
+    3            |- SPEECH*
+    4                 |- SPEAKER  [PCDATA]      b, br
+    4                 |- LINE*    [PCDATA]      br
+                      
+    (*) 1 or more           
 
--- 3
-
-
+    HTML as SimpleXML structure:
+        html
+          |- body
+              |- h1  [PCDATA]
+              |- h2* [PCDATA]
+                  |- h3* [PCDATA]
+                      |- b* [PCDATA]    -- b and br not really elements
+                      |- br* [PCDATA]   -- every PCDATA followed by a br
+    
+-}
+type HtmlTag = String
 
 formatPlay :: SimpleXML -> SimpleXML
-formatPlay _ = PCDATA "WRITE ME"
+formatPlay (Element "PLAY" children) =
+    Element "html" [Element "body" (concatMap formatText children)]
+formatPlay _ = error "formatPlay: not a PLAY element"
 
+formatText :: SimpleXML -> [SimpleXML]
+formatText (Element "TITLE" t)           = [Element "h1" t]
+formatText (Element "PERSONAE" children) = formatPersonae children
+formatText (Element "ACT" children)      = concatMap formatActs children
+formatText xml = [xml]
+    
+formatTitle :: HtmlTag -> SimpleXML -> SimpleXML
+formatTitle htag (Element "TITLE" s) = Element htag s
+formatTitle _ _ = error "formatTitle: not a TITLE element"
+        
+formatPersonae :: [SimpleXML] -> [SimpleXML]
+formatPersonae xml 
+    = [Element "h2" [PCDATA "Dramatis Personae"]] ++ persona xml
+    where
+        persona ((Element "PERSONA" [d]):xs) 
+            = d : Element "br" [] : persona xs
+        persona [] = []
+        persona _ = error "formatPersonae: not a PERSONA element"
+    
+formatActs :: SimpleXML -> [SimpleXML]
+formatActs (Element "TITLE" t) = [Element "h2" t]
+formatActs (Element "SCENE" children) = concatMap formatScenes children
+formatActs xml = [xml]
 
+formatScenes :: SimpleXML -> [SimpleXML]
+formatScenes (Element "TITLE" t)    = [Element "h3" t]
+formatScenes (Element "SPEECH" txt) = concatMap formatSpeech txt
+formatScenes xml = [xml]
 
+formatSpeech :: SimpleXML -> [SimpleXML]
+formatSpeech (Element "SPEAKER" s)  = [Element "b" s, Element "br" []]
+formatSpeech (Element "LINE" (s:[])) = [s , Element "br" []]
+formatSpeech xml = [xml]
+
+-- provided test code
 firstDiff :: Eq a => [a] -> [a] -> Maybe ([a],[a])
 firstDiff [] [] = Nothing
 firstDiff (c:cs) (d:ds) 

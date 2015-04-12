@@ -1,0 +1,42 @@
+<PLAY>
+    <TITLE>Play title</TITLE>
+    <PERSONAE>
+        <PERSONA>Person 1</PERSONA>
+        <PERSONA>Person 2</PERSONA>
+    </PERSONAE>
+    <ACT>
+        <TITLE>Act 1</TITLE>
+        <SCENE>
+            <TITLE>Scene 1</TITLE>
+            <SPEECH>
+                <SPEAKER>Person 1</SPEAKER>
+                    <LINE>Line 1</LINE>
+                    <LINE>Line 2</LINE>
+            </SPEECH>
+        </SCENE>
+    </ACT>
+</PLAY>
+
+<PLAY>
+    <TITLE>Play2 title</TITLE>
+    <PERSONAE>
+        <PERSONA>Person 1</PERSONA>
+        <PERSONA>Person 2</PERSONA>
+    </PERSONAE>
+    <ACT>
+        <TITLE>Act 1</TITLE>
+        <SCENE>
+            <TITLE>Scene 1</TITLE>
+                <SPEECH>
+                    <SPEAKER>Person 1</SPEAKER>
+                    <LINE>Line 1</LINE>
+                    <LINE>Line 2</LINE>
+                </SPEECH>
+                <SPEECH>
+                    <SPEAKER>Person 2</SPEAKER>
+                    <LINE>Line 1</LINE>
+                    <LINE>Line 2</LINE>
+                </SPEECH>
+            </SCENE>
+    </ACT>
+</PLAY>"
