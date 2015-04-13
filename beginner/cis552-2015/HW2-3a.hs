@@ -4,7 +4,7 @@
     CIS 552: Advanced Programming (2015)
     Homework 2 - Datatypes and Trees
 
-    Problem 3 - First attempt
+    Problem 3 - First worked solution to problem 3
         
     Transform a  SimpleXML document from one form (a PLAY) to
     another (HTML).
@@ -84,7 +84,7 @@ formatSpeech (Element "SPEAKER" s)  = [Element "b" s, Element "br" []]
 formatSpeech (Element "LINE" (s:[])) = [s , Element "br" []]
 formatSpeech xml = [xml]
 
--- look at some examples
+-- playing with given method and structures to get a feel for them
 p1 :: String
 p1 = xml2string play
 
@@ -136,7 +136,9 @@ speaker2 = [Element "SPEAKER" [PCDATA "Person 2"],
 p2 :: String                  
 p2 = xml2string smpPlay  
  
--- generic functions to examine the SimpleXML structure           
+-- generic functions to examine the SimpleXML structure  
+-- took a stab at these but didn't use them in solution
+type HtmlTag = String         
 type Dict = [(String, String)]
 
 pdict :: Dict
@@ -185,3 +187,4 @@ test3 = TestCase $ do
   writeFile "dream.html" (xml2string (formatPlay play))
   testResults "dream.html" "sample.html"
 
+runTest3 = runTestTT test3

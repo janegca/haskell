@@ -345,7 +345,21 @@ test1 = TestList [t1a,t1b,t1c]
     Transform a  SimpleXML document from one form (a PLAY) to
     another (HTML).
     
+    The purpose of this assignment is not just to “get the job done”—i.e., to produce the right HTML. A more important goal is to think about what is a good way to do this job, and jobs like it.
+
+    To this end, your solution should be organized into two parts:
+
+     1. a collection of generic functions for transforming XML 
+        structures  that have nothing to do with plays, plus
+
+     2. a short piece of code (a single function definition or a 
+        collection of short functions) that uses the generic functions 
+        to do the particular job of transforming a play into HTML.
+       
+    Obviously, there are many ways to do the first part. The main challenge of the assignment is to find a clean design that matches the needs of the second part. You will be graded not only on correctness (producing the required output), but also on the elegance of your solution and the clarity and readability of your code and documentation. As always, style most definitely counts.    
+    
     Notes:
+    =====
     
     Basic mapping of Play to HTML:
     
@@ -371,48 +385,87 @@ test1 = TestList [t1a,t1b,t1c]
                   |- h3* [PCDATA]
                       |- b* [PCDATA]    -- b and br not really elements
                       |- br* [PCDATA]   -- every PCDATA followed by a br
-    
+                      
+    Second Refactoring Notes:
+    ========================
+           
+    1. How to generalize element transformation patterns?
+        PLAY
+            Element tag children -> 
+                [Element newTag  [Element newTag (concatMap children)]]  
+        
+        TITLE
+            Element tag child    -> Element newTag child
+            
+        PERSONAE 
+            Element tag children -> new Data Element ++ concatMap children
+            
+        PERSONA, LINE 
+            Element tag child    -> child ++ new Element
+            
+        ACT, SCENE 
+            Element tag (x:xs)   -> [Element tag x] ++ concatMap children
+            
+        SPEECH 
+            Element tag children -> concatMap children
+            
+        SPEAKER
+            Element tag child   -> [Element tag child] ++ new Element
+            
+    2. Wrote four generic functions: mapChildren, newElement,
+       processChildren, appendChild, based on above transform patterns
+       
+    3. Tightened up code, reducing solution to one function with
+       an internal helper
+       
 -}
-type HtmlTag = String
+-- generic functions
+type Tag = String
+
+mapChildren :: (SimpleXML -> [SimpleXML]) -> [SimpleXML] -> [SimpleXML]
+-- | Map the given function to the given child elements,
+--   concatenating the results.
+mapChildren f = concatMap f
+
+newElement :: Tag -> [SimpleXML] -> SimpleXML
+-- | Create a new element with the given tag and children
+newElement tag cs = Element tag cs
+
+processChildren :: Tag -> (SimpleXML -> [SimpleXML]) ->[SimpleXML] 
+                       -> [SimpleXML]
+-- | Create a new element from the given tag and first child,
+--   apply the given function to the remaining children
+processChildren tag f ((Element _ d):cs) = 
+    [Element tag d] ++ mapChildren f cs
+processChildren _ _ xml = xml    
+
+appendChild :: SimpleXML -> [SimpleXML] -> [SimpleXML]
+-- | Append the given element to the given child elements
+appendChild c cs = cs ++ [c]
+
+-- 
 
 formatPlay :: SimpleXML -> SimpleXML
 formatPlay (Element "PLAY" children) =
-    Element "html" [Element "body" (concatMap formatText children)]
-formatPlay _ = error "formatPlay: not a PLAY element"
-
-formatText :: SimpleXML -> [SimpleXML]
-formatText (Element "TITLE" t)           = [Element "h1" t]
-formatText (Element "PERSONAE" children) = formatPersonae children
-formatText (Element "ACT" children)      = concatMap formatActs children
-formatText xml = [xml]
-    
-formatTitle :: HtmlTag -> SimpleXML -> SimpleXML
-formatTitle htag (Element "TITLE" s) = Element htag s
-formatTitle _ _ = error "formatTitle: not a TITLE element"
-        
-formatPersonae :: [SimpleXML] -> [SimpleXML]
-formatPersonae xml 
-    = [Element "h2" [PCDATA "Dramatis Personae"]] ++ persona xml
+    Element "html" [Element "body" (mapChildren fmt children)]
     where
-        persona ((Element "PERSONA" [d]):xs) 
-            = d : Element "br" [] : persona xs
-        persona [] = []
-        persona _ = error "formatPersonae: not a PERSONA element"
+    fmt :: SimpleXML -> [SimpleXML]
+    fmt (Element "TITLE"    c)  = [newElement "h1" c]
+    fmt (Element "PERSONAE" cs) = dm : mapChildren fmt cs
+    fmt (Element "PERSONA"  c)  = appendChild br c 
+    fmt (Element "ACT"      cs) = processChildren "h2" fmt cs
+    fmt (Element "SCENE"    cs) = processChildren "h3" fmt cs
+    fmt (Element "SPEECH"   cs) = mapChildren fmt cs
+    fmt (Element "SPEAKER"  c)  = appendChild br [newElement "b" c]
+    fmt (Element "LINE"     c)  = appendChild br c
+    fmt _ = error "formatPlay: invalid child tag"
     
-formatActs :: SimpleXML -> [SimpleXML]
-formatActs (Element "TITLE" t) = [Element "h2" t]
-formatActs (Element "SCENE" children) = concatMap formatScenes children
-formatActs xml = [xml]
+    -- define additional required HTML elements
+    dm, br :: SimpleXML
+    dm = newElement "h2" [PCDATA "Dramatis Personae"]
+    br = newElement "br" []
 
-formatScenes :: SimpleXML -> [SimpleXML]
-formatScenes (Element "TITLE" t)    = [Element "h3" t]
-formatScenes (Element "SPEECH" txt) = concatMap formatSpeech txt
-formatScenes xml = [xml]
-
-formatSpeech :: SimpleXML -> [SimpleXML]
-formatSpeech (Element "SPEAKER" s)  = [Element "b" s, Element "br" []]
-formatSpeech (Element "LINE" (s:[])) = [s , Element "br" []]
-formatSpeech xml = [xml]
+formatPlay _ =  error "formatPlay: not in PLAY format"        
 
 -- provided test code
 firstDiff :: Eq a => [a] -> [a] -> Maybe ([a],[a])
@@ -439,3 +492,5 @@ test3 = TestCase $ do
   writeFile "dream.html" (xml2string (formatPlay play))
   testResults "dream.html" "sample.html"
 
+runTest3 :: IO Counts
+runTest3 = runTestTT test3
